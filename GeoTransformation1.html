@@ -1,0 +1,2134 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GéoTransformation</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+/* ══ THÈMES ══ */
+:root[data-theme="dark"] {
+  --bg: #0d0f1a; --surface: #161929; --surface2: #1e2438; --border: #2a3050;
+  --text: #e8ecf8; --muted: #7a84aa; --grid-minor: rgba(42,48,80,.7);
+  --grid-major: rgba(107,117,153,.45); --canvas-bg: #0d0f1a;
+  --c-axiale-proj: rgba(79,247,176,.9); --c-axiale-mid: rgba(247,201,79,.95);
+  --c-centrale-link: rgba(247,79,176,.9); --c-translation-trail: rgba(79,200,247,.85);
+  --c-rotation-arc: rgba(247,201,79,.9); --c-rotation-radius: rgba(247,150,79,.9);
+}
+:root[data-theme="light"] {
+  --bg: #f0f2fa; --surface: #ffffff; --surface2: #e8ecf8; --border: #c4cae8;
+  --text: #1a1f3a; --muted: #5a6490; --grid-minor: rgba(180,190,230,.65);
+  --grid-major: rgba(120,130,180,.5); --canvas-bg: #f7f8fd;
+  --c-axiale-proj: rgba(0,160,80,.95); --c-axiale-mid: rgba(200,120,0,.95);
+  --c-centrale-link: rgba(180,0,140,.9); --c-translation-trail: rgba(0,140,210,.85);
+  --c-rotation-arc: rgba(180,130,0,.9); --c-rotation-radius: rgba(200,80,0,.9);
+}
+:root { --a1:#4f8ef7; --a2:#f74f8e; --a3:#4ff7b0; --a4:#f7c94f; --panel-w:300px; --header-h:56px; }
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;display:flex;flex-direction:column;transition:background .25s,color .25s}
+
+/* ── HEADER ── */
+header{height:var(--header-h);flex-shrink:0;display:flex;align-items:center;gap:10px;padding:0 16px;background:var(--surface);border-bottom:1px solid var(--border);transition:background .25s,border-color .25s}
+.logo{font-size:1rem;font-weight:800;letter-spacing:.04em;white-space:nowrap}
+.logo span{color:var(--a1)}
+nav{display:flex;gap:4px;flex-wrap:wrap;flex:1;justify-content:center}
+.tab-btn{padding:5px 12px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700;border-radius:8px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.tab-btn:hover{border-color:var(--a1);color:var(--text)}
+.tab-btn.active[data-tab="axiale"]{background:var(--a1);border-color:var(--a1);color:#fff}
+.tab-btn.active[data-tab="centrale"]{background:var(--a2);border-color:var(--a2);color:#fff}
+.tab-btn.active[data-tab="translation"]{background:var(--a3);border-color:var(--a3);color:#0d0f1a}
+.tab-btn.active[data-tab="rotation"]{background:var(--a4);border-color:var(--a4);color:#0d0f1a}
+.theme-btn{padding:5px 10px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;border-radius:8px;cursor:pointer;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:5px;flex-shrink:0}
+.theme-btn:hover{border-color:var(--a1)}
+
+/* ── APP / PANES ── */
+#app{flex:1;overflow:hidden;position:relative}
+.tab-pane{display:none;position:absolute;inset:0}
+.tab-pane.active{display:flex}
+
+/* ── PANEL ── */
+.panel{width:var(--panel-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;padding:14px 13px 18px;gap:12px;transition:background .25s,border-color .25s}
+.sec-title{font-size:.6rem;font-weight:700;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:1px}
+.panel-section{display:flex;flex-direction:column;gap:9px}
+select{background:var(--surface2);border:1.5px solid var(--border);color:var(--text);border-radius:7px;padding:6px 9px;font-family:'Syne',sans-serif;font-size:.8rem;cursor:pointer;outline:none;width:100%;transition:all .25s}
+select:focus{border-color:var(--a1)}
+.slider-row{display:flex;flex-direction:column;gap:4px}
+.slider-lbl{display:flex;justify-content:space-between;align-items:center;font-size:.76rem;color:var(--text);font-weight:600}
+.sval{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--a1);background:rgba(79,142,247,.13);border-radius:4px;padding:1px 6px;min-width:42px;text-align:center}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:5px;background:var(--border);border-radius:3px;outline:none;cursor:pointer;touch-action:manipulation}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--a1);cursor:pointer;border:none;box-shadow:0 0 0 3px rgba(79,142,247,.3)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--a1);cursor:pointer;border:none;box-shadow:0 0 0 3px rgba(79,142,247,.3)}
+.toggles{display:flex;gap:5px;flex-wrap:wrap}
+.tog{padding:4px 9px;border-radius:6px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.7rem;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;transition:all .15s}
+.tog.on{border-color:var(--a3);color:var(--a3)}
+.anim-btn{padding:9px;border-radius:10px;font-size:.85rem;font-weight:700;border:none;cursor:pointer;font-family:'Syne',sans-serif;transition:transform .15s,box-shadow .15s;width:100%}
+.anim-btn:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(0,0,0,.35)}
+.anim-btn.ax{background:linear-gradient(135deg,#4f8ef7,#7b4ff7);color:#fff}
+.anim-btn.ce{background:linear-gradient(135deg,#f74f8e,#f74f4f);color:#fff}
+.anim-btn.tr{background:linear-gradient(135deg,#4ff7b0,#4ff7f7);color:#0d0f1a}
+.anim-btn.ro{background:linear-gradient(135deg,#f7c94f,#f7894f);color:#0d0f1a}
+.legend{display:flex;flex-direction:column;gap:5px}
+.leg-item{display:flex;align-items:center;gap:7px;font-size:.74rem;color:var(--muted)}
+.leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.leg-line{width:18px;height:3px;border-radius:2px;flex-shrink:0}
+.def-box{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:.72rem;color:var(--muted);line-height:1.6;margin-top:auto;transition:all .25s}
+.def-box strong{color:var(--text);display:block;margin-bottom:2px;font-size:.78rem}
+.construct-info{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:.7rem;color:var(--muted);line-height:1.5;transition:all .25s}
+.construct-info .ci-title{font-size:.71rem;font-weight:700;color:var(--text);margin-bottom:4px;display:block}
+.construct-info .ci-item{display:flex;align-items:flex-start;gap:5px;margin-bottom:3px}
+.construct-info .ci-swatch{width:13px;height:3px;border-radius:2px;flex-shrink:0;margin-top:6px}
+
+/* ── ZONE IMAGE IMPORT ── */
+.img-zone{display:none;flex-direction:column;gap:7px}
+.img-zone.visible{display:flex}
+.img-drop{border:2px dashed var(--border);border-radius:8px;padding:12px 8px;text-align:center;font-size:.72rem;color:var(--muted);cursor:pointer;transition:all .2s;background:var(--surface2)}
+.img-drop:hover,.img-drop.drag-over{border-color:var(--a1);color:var(--text);background:rgba(79,142,247,.08)}
+.img-drop input[type=file]{display:none}
+.img-drop label{cursor:pointer;display:block}
+.img-preview{width:100%;border-radius:6px;border:1px solid var(--border);max-height:80px;object-fit:contain;display:none;background:var(--surface2)}
+.img-preview.visible{display:block}
+.img-hint{font-size:.68rem;color:var(--muted);text-align:center}
+.img-size-row{display:flex;gap:8px;align-items:center}
+.img-size-row label{font-size:.72rem;color:var(--text);font-weight:600;flex-shrink:0}
+.img-size-row input[type=range]{flex:1}
+
+/* ── CANVAS AREA ── */
+.canvas-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.canvas-bar{flex-shrink:0;height:32px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;font-size:.72rem;color:var(--muted);transition:all .25s}
+.coord-badge{font-family:'Space Mono',monospace;font-size:.66rem;color:var(--a1);background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;transition:all .25s}
+canvas{display:block;touch-action:none;cursor:crosshair}
+
+/* ── HINT TAG SUR LE CANVAS ── */
+.canvas-hint{position:absolute;bottom:10px;right:12px;font-size:.68rem;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 9px;pointer-events:none;transition:all .25s;z-index:10}
+
+@media(max-width:680px){
+  :root{--header-h:auto}
+  header{flex-wrap:wrap;padding:8px 10px;height:auto;gap:7px}
+  nav{justify-content:flex-start}
+  .tab-btn{padding:4px 9px;font-size:.72rem}
+  .tab-pane{flex-direction:column}
+  .panel{width:100%;border-right:none;border-bottom:1px solid var(--border);flex-direction:row;flex-wrap:wrap;max-height:38vh;padding:8px 10px;gap:8px;overflow-y:auto}
+  .panel-section{min-width:120px;flex:1}
+  .def-box,.construct-info{display:none}
+  .canvas-wrap{flex:1;min-height:0}
+}
+
+/* ZOOM */
+.zoom-ctrl{position:absolute;bottom:12px;right:12px;display:flex;flex-direction:column;gap:4px;z-index:20}
+.zoom-btn{width:30px;height:30px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:1.1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:monospace}
+.zoom-btn:hover{border-color:var(--a1);color:var(--a1)}
+.zpct{font-family:'Space Mono',monospace;font-size:.58rem;color:var(--muted);text-align:center;user-select:none}
+/* BOUTONS VIDÉO */
+.vid-section{display:flex;flex-direction:column;gap:6px}
+.vid-btn{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:10px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;width:100%;text-align:left;transition:all .18s;color:var(--text);border:1.5px solid var(--border);background:var(--surface2)}
+.vid-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.28)}
+.vid-icon{width:34px;height:34px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.vid-lbl{flex:1;font-size:.8rem;font-weight:700}
+.vid-ply{font-size:.9rem;opacity:.5;flex-shrink:0}
+.vid-btn.av{border-color:rgba(79,142,247,.45);background:rgba(79,142,247,.07)}.vid-btn.av:hover{border-color:#4f8ef7;background:rgba(79,142,247,.15)}
+.vid-btn.cv{border-color:rgba(247,79,142,.45);background:rgba(247,79,142,.07)}.vid-btn.cv:hover{border-color:#f74f8e;background:rgba(247,79,142,.15)}
+.vid-btn.tv{border-color:rgba(79,247,176,.45);background:rgba(79,247,176,.07)}.vid-btn.tv:hover{border-color:#4ff7b0;background:rgba(79,247,176,.15)}
+.vid-btn.rv{border-color:rgba(247,201,79,.45);background:rgba(247,201,79,.07)}.vid-btn.rv:hover{border-color:#f7c94f;background:rgba(247,201,79,.15)}
+/* Zone côtés polygone */
+.sides-zone{display:none;flex-direction:column;gap:4px}
+.sides-zone.visible{display:flex}
+
+/* ── FENÊTRE MATÉRIEL ── */
+.tools-widget{
+  position:absolute;top:10px;right:12px;z-index:30;
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:12px;padding:10px 13px 11px;
+  display:flex;flex-direction:column;gap:7px;
+  box-shadow:0 4px 20px rgba(0,0,0,.35);
+  min-width:148px;
+  transition:background .25s,border-color .25s;
+  pointer-events:none;
+}
+.tools-widget-title{
+  font-size:.56rem;font-weight:700;letter-spacing:.14em;
+  color:var(--muted);text-transform:uppercase;margin-bottom:1px;
+}
+.tools-list{display:flex;flex-direction:column;gap:5px;}
+.tool-item{
+  display:flex;align-items:center;gap:8px;
+  font-size:.73rem;font-weight:600;color:var(--text);
+}
+.tool-item .tool-icon{
+  font-size:1.05rem;width:22px;height:22px;text-align:center;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+}
+.tool-icon svg{width:18px;height:18px;}
+.tool-item.required .tool-icon svg{color:var(--text);}
+.tool-item.optional .tool-icon svg{color:var(--muted);}
+.tool-item .tool-name{flex:1;}
+.tool-item.required .tool-name{color:var(--text);}
+.tool-item.optional .tool-name{color:var(--muted);font-weight:400;font-style:italic;}
+.tool-badge{
+  font-size:.55rem;font-weight:700;letter-spacing:.06em;
+  padding:1px 5px;border-radius:4px;flex-shrink:0;
+}
+.tool-badge.req{background:rgba(79,247,176,.18);color:#4ff7b0;border:1px solid rgba(79,247,176,.35);}
+.tool-badge.opt{background:rgba(122,132,170,.12);color:var(--muted);border:1px solid rgba(122,132,170,.25);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Géo<span>Transformation</span></div>
+  <nav>
+    <button class="tab-btn active" data-tab="axiale">⟷ Sym. Axiale</button>
+    <button class="tab-btn" data-tab="centrale">◎ Sym. Centrale</button>
+    <button class="tab-btn" data-tab="translation">→ Translation</button>
+    <button class="tab-btn" data-tab="rotation">↻ Rotation</button>
+  </nav>
+  <button class="theme-btn" id="theme-toggle">
+    <span id="theme-icon">☀️</span>
+    <span id="theme-lbl">Mode clair</span>
+  </button>
+</header>
+
+<div id="app">
+
+<!-- ════════════ SYMÉTRIE AXIALE ════════════ -->
+<div class="tab-pane active" id="pane-axiale">
+  <div class="panel">
+    <div class="panel-section">
+      <div class="sec-title">Objet à transformer</div>
+      <select id="ax-shape">
+        <option value="maison">Polygone — Maison</option>
+        <option value="fleche">Polygone — Flèche</option>
+        <option value="lettre">Polygone — Lettre F</option>
+        <option value="polygone">⬡ Polygone régulier</option>
+        <option value="cercle">○ Cercle</option>
+        <option value="point">● Point libre M</option>
+        <option value="droite">— Droite (AB)</option>
+        <option value="image">🖼 Image importée</option>
+      </select>
+      <div class="sides-zone" id="ax-sides-zone">
+        <div class="slider-row">
+          <div class="slider-lbl"><span>Nombre de côtés</span><span class="sval" id="ax-sides-v">5</span></div>
+          <input type="range" id="ax-sides" min="3" max="12" value="5">
+        </div>
+      </div>
+      <div class="img-zone" id="ax-img-zone">
+        <div class="img-drop" id="ax-drop">
+          <label for="ax-file-in">📂 Cliquer ou déposer une image<br><span style="font-size:.65rem;opacity:.7">JPG, PNG, GIF, SVG…</span></label>
+          <input type="file" id="ax-file-in" accept="image/*">
+        </div>
+        <img class="img-preview" id="ax-img-preview" alt="aperçu">
+        <div class="img-size-row">
+          <label>Taille</label>
+          <input type="range" id="ax-img-size" min="40" max="300" value="120">
+          <span class="sval" id="ax-img-size-v">120</span>
+        </div>
+        <div class="img-hint">L'image est transformée avec opacité 50%</div>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="sec-title">Axe de symétrie (d)</div>
+      <div style="font-size:.68rem;color:var(--muted);margin-top:2px">💡 Glisser <b style="color:#4ff7b0">P</b> ou <b style="color:#4ff7b0">Q</b> sur le canvas pour orienter (d)</div>
+    </div>
+    <div class="panel-section">
+      <div class="sec-title">Affichage</div>
+      <div class="toggles">
+        <button class="tog on" id="ax-tg-grid">Grille</button>
+        <button class="tog on" id="ax-tg-axis">Axe (d)</button>
+        <button class="tog on" id="ax-tg-proj">Médiatrices</button>
+      </div>
+    </div>
+    <div class="construct-info">
+      <span class="ci-title">🔍 Traits de construction</span>
+      <div class="ci-item"><div class="ci-swatch" style="background:#4ff7b0"></div><span><b>Axe (d)</b> = droite (PQ) : médiatrice de chaque segment [MM']. Points P et Q déplaçables.</span></div>
+      <div class="ci-item"><div class="ci-swatch" style="background:#f7c94f"></div><span><b>Médiatrices</b> : [MM'] coupé à angle droit par l'axe. Nbre de tirets = longueur du segment.</span></div>
+    </div>
+    <button class="anim-btn ax" id="ax-anim">▶ Animer la symétrie</button>
+    <div class="vid-section">
+      <div class="sec-title">📹 Vidéos explicatives</div>
+      <button class="vid-btn av" onclick="window.open('https://www.youtube.com/watch?v=JauG01P544k','_blank')">
+        <div class="vid-icon">📍</div>
+        <span class="vid-lbl">Symétrie d’un point</span>
+        <span class="vid-ply">▶</span>
+      </button>
+      <button class="vid-btn av" onclick="window.open('https://www.youtube.com/watch?v=sRcgsiPeIq4','_blank')">
+        <div class="vid-icon">🔷</div>
+        <span class="vid-lbl">Symétrie d’une figure</span>
+        <span class="vid-ply">▶</span>
+      </button>
+    </div>
+    <div class="panel-section">
+      <div class="sec-title">Légende</div>
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#4f8ef7"></div>Objet original (bleu)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#f74f8e"></div>Image transformée (rose)</div>
+        <div class="leg-item"><div class="leg-line" style="background:#4ff7b0"></div>Axe (d) — droite (PQ)</div>
+      </div>
+    </div>
+  </div>
+  <div class="canvas-wrap">
+    <div class="canvas-bar">
+      <span id="ax-hint-bar">Glisser l'objet · curseurs pour l'axe</span>
+      <span class="coord-badge" id="ax-coord">—</span>
+    </div>
+    <canvas id="c-axiale"></canvas>
+    <div class="tools-widget" id="tools-axiale">
+      <div class="tools-widget-title">📐 Matériel élève</div>
+      <div class="tools-list">
+        <div class="tool-item required"><span class="tool-icon">📏</span><span class="tool-name">Règle</span><span class="tool-badge req">requis</span></div>
+        <div class="tool-item required"><span class="tool-icon">📐</span><span class="tool-name">Équerre</span><span class="tool-badge req">requis</span></div>
+        <div class="tool-item required"><span class="tool-icon">⭕</span><span class="tool-name">Compas</span><span class="tool-badge req">requis</span></div>
+        <div class="tool-item optional"><span class="tool-icon">🧭</span><span class="tool-name">Rapporteur</span><span class="tool-badge opt">optionnel</span></div>
+      </div>
+    </div>
+    <div class="zoom-ctrl">
+      <button class="zoom-btn" id="ax-zp">+</button>
+      <div class="zpct" id="ax-zpct">100%</div>
+      <button class="zoom-btn" id="ax-zm">−</button>
+      <button class="zoom-btn" title="Réinitialiser" id="ax-zr">⊙</button>
+    </div>
+    <div class="canvas-hint" id="ax-canvas-hint"></div>
+  </div>
+</div>
+
+<!-- ════════════ SYMÉTRIE CENTRALE ════════════ -->
+<div class="tab-pane" id="pane-centrale">
+  <div class="panel">
+    <div class="panel-section">
+      <div class="sec-title">Objet à transformer</div>
+      <select id="ce-shape">
+        <option value="maison">Polygone — Maison</option>
+        <option value="fleche">Polygone — Flèche</option>
+        <option value="lettre">Polygone — Lettre F</option>
+        <option value="polygone">⬡ Polygone régulier</option>
+        <option value="cercle">○ Cercle</option>
+        <option value="point">● Point libre M</option>
+        <option value="droite">— Droite (AB)</option>
+        <option value="image">🖼 Image importée</option>
+      </select>
+      <div class="sides-zone" id="ce-sides-zone">
+        <div class="slider-row">
+          <div class="slider-lbl"><span>Nombre de côtés</span><span class="sval" id="ce-sides-v">5</span></div>
+          <input type="range" id="ce-sides" min="3" max="12" value="5">
+        </div>
+      </div>
+      <div class="img-zone" id="ce-img-zone">
+        <div class="img-drop" id="ce-drop">
+          <label for="ce-file-in">📂 Cliquer ou déposer une image<br><span style="font-size:.65rem;opacity:.7">JPG, PNG, GIF, SVG…</span></label>
+          <input type="file" id="ce-file-in" accept="image/*">
+        </div>
+        <img class="img-preview" id="ce-img-preview" alt="aperçu">
+        <div class="img-size-row">
+          <label>Taille</label>
+          <input type="range" id="ce-img-size" min="40" max="300" value="120">
+          <span class="sval" id="ce-img-size-v">120</span>
+        </div>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="sec-title">Centre O</div>
+      <div style="font-size:.68rem;color:var(--muted);margin-top:2px">💡 Glisser <b style="color:#f7c94f">O</b> sur le canvas pour déplacer le centre</div>
+    </div>
+    <div class="panel-section">
+      <div class="sec-title">Affichage</div>
+      <div class="toggles">
+        <button class="tog on" id="ce-tg-grid">Grille</button>
+        <button class="tog on" id="ce-tg-center">Centre O</button>
+        <button class="tog on" id="ce-tg-lines">Liaisons M→O→M'</button>
+      </div>
+    </div>
+    <div class="construct-info">
+      <span class="ci-title">🔍 Traits de construction</span>
+      <div class="ci-item"><div class="ci-swatch" style="background:#f74fbc"></div><span><b>Liaisons</b> : M, O et M' sont alignés, O milieu de [MM'].</span></div>
+    </div>
+    <button class="anim-btn ce" id="ce-anim">▶ Animer la symétrie</button>
+    <div class="vid-section">
+      <div class="sec-title">📹 Vidéos explicatives</div>
+      <button class="vid-btn cv" onclick="window.open('https://www.youtube.com/watch?v=SmdZEpPKYF8','_blank')">
+        <div class="vid-icon">📍</div>
+        <span class="vid-lbl">Symétrie d’un point</span>
+        <span class="vid-ply">▶</span>
+      </button>
+      <button class="vid-btn cv" onclick="window.open('https://www.youtube.com/watch?v=gQZIWxzOfaE','_blank')">
+        <div class="vid-icon">🔷</div>
+        <span class="vid-lbl">Symétrie d’une figure</span>
+        <span class="vid-ply">▶</span>
+      </button>
+    </div>
+    <div class="panel-section">
+      <div class="sec-title">Légende</div>
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#4f8ef7"></div>Objet original</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#f74f8e"></div>Image transformée</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#f7c94f"></div>Centre O</div>
+      </div>
+    </div>
+  </div>
+  <div class="canvas-wrap">
+    <div class="canvas-bar">
+      <span id="ce-hint-bar">Glisser l'objet · curseurs pour le centre</span>
+      <span class="coord-badge" id="ce-coord">—</span>
+    </div>
+    <canvas id="c-centrale"></canvas>
+    <div class="tools-widget" id="tools-centrale">
+      <div class="tools-widget-title">📐 Matériel élève</div>
+      <div class="tools-list">
+        <div class="tool-item required"><span class="tool-icon">📏</span><span class="tool-name">Règle</span><span class="tool-badge req">requis</span></div>
+        <div class="tool-item optional"><span class="tool-icon">📐</span><span class="tool-name">Équerre</span><span class="tool-badge opt">optionnel</span></div>
+        <div class="tool-item required"><span class="tool-icon">⭕</span><span class="tool-name">Compas</span><span class="tool-badge req">requis</span></div>
+        <div class="tool-item optional"><span class="tool-icon">🧭</span><span class="tool-name">Rapporteur</span><span class="tool-badge opt">optionnel</span></div>
+      </div>
+    </div>
+    <div class="zoom-ctrl">
+      <button class="zoom-btn" id="ce-zp">+</button>
+      <div class="zpct" id="ce-zpct">100%</div>
+      <button class="zoom-btn" id="ce-zm">−</button>
+      <button class="zoom-btn" title="Réinitialiser" id="ce-zr">⊙</button>
+    </div>
+    <div class="canvas-hint" id="ce-canvas-hint"></div>
+  </div>
+</div>
+
+<!-- ════════════ TRANSLATION ════════════ -->
+<div class="tab-pane" id="pane-translation">
+  <div class="panel">
+    <div class="panel-section">
+      <div class="sec-title">Objet à transformer</div>
+      <select id="tr-shape">
+        <option value="maison">Polygone — Maison</option>
+        <option value="fleche">Polygone — Flèche</option>
+        <option value="lettre">Polygone — Lettre F</option>
+        <option value="polygone">⬡ Polygone régulier</option>
+        <option value="cercle">○ Cercle</option>
+        <option value="point">● Point libre M</option>
+        <option value="droite">— Droite (AB)</option>
+        <option value="image">🖼 Image importée</option>
+      </select>
+      <div class="sides-zone" id="tr-sides-zone">
+        <div class="slider-row">
+          <div class="slider-lbl"><span>Nombre de côtés</span><span class="sval" id="tr-sides-v">5</span></div>
+          <input type="range" id="tr-sides" min="3" max="12" value="5">
+        </div>
+      </div>
+      <div class="img-zone" id="tr-img-zone">
+        <div class="img-drop" id="tr-drop">
+          <label for="tr-file-in">📂 Cliquer ou déposer une image<br><span style="font-size:.65rem;opacity:.7">JPG, PNG, GIF, SVG…</span></label>
+          <input type="file" id="tr-file-in" accept="image/*">
+        </div>
+        <img class="img-preview" id="tr-img-preview" alt="aperçu">
+        <div class="img-size-row">
+          <label>Taille</label>
+          <input type="range" id="tr-img-size" min="40" max="300" value="120">
+          <span class="sval" id="tr-img-size-v">120</span>
+        </div>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="sec-title">Vecteur <span style="display:inline-block;position:relative;padding-top:0.5em">MN<span style="position:absolute;top:0;left:0;right:0;text-align:center;font-size:0.85em;line-height:1">&#x2192;</span></span></div>
+      <div style="font-size:.68rem;color:var(--muted);margin-top:2px">💡 Glisser <b style="color:#4ff7b0">M</b> ou <b style="color:#4ff7b0">N</b> sur le canvas pour modifier le vecteur</div>
+    </div>
+    <div class="panel-section">
+      <div class="sec-title">Affichage</div>
+      <div class="toggles">
+        <button class="tog on" id="tr-tg-grid">Grille</button>
+        <button class="tog on" id="tr-tg-vec">Vecteur <span style="display:inline-block;position:relative;padding-top:0.5em">MN<span style="position:absolute;top:0;left:0;right:0;text-align:center;font-size:0.85em;line-height:1">&#x2192;</span></span></button>
+        <button class="tog on" id="tr-tg-trail">Traces</button>
+      </div>
+    </div>
+    <div class="construct-info">
+      <span class="ci-title">🔍 Traits de construction</span>
+      <div class="ci-item"><div class="ci-swatch" style="background:#4fc8f7"></div><span><b>Traces</b> : déplacements parallèles de chaque point, égaux au vecteur <span style="display:inline-block;position:relative;padding-top:0.5em">MN<span style="position:absolute;top:0;left:0;right:0;text-align:center;font-size:0.85em;line-height:1">&#x2192;</span></span>.</span></div>
+    </div>
+    <button class="anim-btn tr" id="tr-anim">▶ Animer la translation</button>
+    <div class="vid-section">
+      <div class="sec-title">📹 Vidéos explicatives</div>
+      <button class="vid-btn tv" onclick="window.open('https://www.youtube.com/watch?v=YzG5ZP9Kp6k','_blank')">
+        <div class="vid-icon">📍</div>
+        <span class="vid-lbl">Translation d’un point</span>
+        <span class="vid-ply">▶</span>
+      </button>
+      <button class="vid-btn tv" onclick="window.open('https://www.youtube.com/watch?v=chYUBSVEoFo','_blank')">
+        <div class="vid-icon">🔷</div>
+        <span class="vid-lbl">Translation d’une figure</span>
+        <span class="vid-ply">▶</span>
+      </button>
+    </div>
+    <div class="panel-section">
+      <div class="sec-title">Légende</div>
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#4f8ef7"></div>Objet original</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#f74f8e"></div>Image transformée</div>
+        <div class="leg-item"><div class="leg-line" style="background:#f7c94f"></div>Vecteur <span style="display:inline-block;position:relative;padding-top:0.5em">MN<span style="position:absolute;top:0;left:0;right:0;text-align:center;font-size:0.85em;line-height:1">&#x2192;</span></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="canvas-wrap">
+    <div class="canvas-bar">
+      <span id="tr-hint-bar">Glisser l'objet · curseurs pour le vecteur</span>
+      <span class="coord-badge" id="tr-coord">—</span>
+    </div>
+    <canvas id="c-translation"></canvas>
+    <div class="tools-widget" id="tools-translation">
+      <div class="tools-widget-title">📐 Matériel élève</div>
+      <div class="tools-list">
+        <div class="tool-item required"><span class="tool-icon">📏</span><span class="tool-name">Règle</span><span class="tool-badge req">requis</span></div>
+        <div class="tool-item required"><span class="tool-icon">📐</span><span class="tool-name">Équerre</span><span class="tool-badge req">requis</span></div>
+        <div class="tool-item optional"><span class="tool-icon">⭕</span><span class="tool-name">Compas</span><span class="tool-badge opt">optionnel</span></div>
+        <div class="tool-item optional"><span class="tool-icon">🧭</span><span class="tool-name">Rapporteur</span><span class="tool-badge opt">optionnel</span></div>
+      </div>
+    </div>
+    <div class="zoom-ctrl">
+      <button class="zoom-btn" id="tr-zp">+</button>
+      <div class="zpct" id="tr-zpct">100%</div>
+      <button class="zoom-btn" id="tr-zm">−</button>
+      <button class="zoom-btn" title="Réinitialiser" id="tr-zr">⊙</button>
+    </div>
+    <div class="canvas-hint" id="tr-canvas-hint"></div>
+  </div>
+</div>
+
+<!-- ════════════ ROTATION ════════════ -->
+<div class="tab-pane" id="pane-rotation">
+  <div class="panel">
+    <div class="panel-section">
+      <div class="sec-title">Objet à transformer</div>
+      <select id="ro-shape">
+        <option value="maison">Polygone — Maison</option>
+        <option value="fleche">Polygone — Flèche</option>
+        <option value="lettre">Polygone — Lettre F</option>
+        <option value="polygone">⬡ Polygone régulier</option>
+        <option value="cercle">○ Cercle</option>
+        <option value="point">● Point libre M</option>
+        <option value="droite">— Droite (AB)</option>
+        <option value="image">🖼 Image importée</option>
+      </select>
+      <div class="sides-zone" id="ro-sides-zone">
+        <div class="slider-row">
+          <div class="slider-lbl"><span>Nombre de côtés</span><span class="sval" id="ro-sides-v">5</span></div>
+          <input type="range" id="ro-sides" min="3" max="12" value="5">
+        </div>
+      </div>
+      <div class="img-zone" id="ro-img-zone">
+        <div class="img-drop" id="ro-drop">
+          <label for="ro-file-in">📂 Cliquer ou déposer une image<br><span style="font-size:.65rem;opacity:.7">JPG, PNG, GIF, SVG…</span></label>
+          <input type="file" id="ro-file-in" accept="image/*">
+        </div>
+        <img class="img-preview" id="ro-img-preview" alt="aperçu">
+        <div class="img-size-row">
+          <label>Taille</label>
+          <input type="range" id="ro-img-size" min="40" max="300" value="120">
+          <span class="sval" id="ro-img-size-v">120</span>
+        </div>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="sec-title">Paramètres</div>
+      <div class="slider-row">
+        <div class="slider-lbl"><span>Angle</span><span class="sval" id="ro-ang-v">90°</span></div>
+        <input type="range" id="ro-ang" min="-360" max="360" value="90">
+      </div>
+      <div style="font-size:.68rem;color:var(--muted);margin-top:2px">💡 Glisser <b style="color:#f7c94f">O</b> sur le canvas pour déplacer le centre</div>
+    </div>
+    <div class="panel-section">
+      <div class="sec-title">Affichage</div>
+      <div class="toggles">
+        <button class="tog on" id="ro-tg-grid">Grille</button>
+        <button class="tog on" id="ro-tg-center">Centre O + rayons</button>
+        <button class="tog on" id="ro-tg-arc">Arcs de cercle</button>
+      </div>
+    </div>
+    <div class="construct-info">
+      <span class="ci-title">🔍 Traits de construction</span>
+      <div class="ci-item"><div class="ci-swatch" style="background:#f7c94f"></div><span><b>Rayons</b> : OM = OM', distance conservée.</span></div>
+      <div class="ci-item"><div class="ci-swatch" style="background:#f79440"></div><span><b>Arcs</b> : trajectoire circulaire de chaque point, angle α.</span></div>
+    </div>
+    <button class="anim-btn ro" id="ro-anim">▶ Animer la rotation</button>
+    <div class="vid-section">
+      <div class="sec-title">📹 Vidéos explicatives</div>
+      <button class="vid-btn rv" onclick="window.open('https://www.youtube.com/watch?v=xd_-KzMmjwI','_blank')">
+        <div class="vid-icon">📍</div>
+        <span class="vid-lbl">Rotation d’un point</span>
+        <span class="vid-ply">▶</span>
+      </button>
+      <button class="vid-btn rv" onclick="window.open('https://www.youtube.com/watch?v=aiJ0J3x6UcQ','_blank')">
+        <div class="vid-icon">🔷</div>
+        <span class="vid-lbl">Rotation d’une figure</span>
+        <span class="vid-ply">▶</span>
+      </button>
+    </div>
+    <div class="panel-section">
+      <div class="sec-title">Légende</div>
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#4f8ef7"></div>Objet original</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#f74f8e"></div>Image transformée</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#f7c94f"></div>Centre O</div>
+      </div>
+    </div>
+  </div>
+  <div class="canvas-wrap">
+    <div class="canvas-bar">
+      <span id="ro-hint-bar">Glisser l'objet · curseurs pour l'angle et le centre</span>
+      <span class="coord-badge" id="ro-coord">—</span>
+    </div>
+    <canvas id="c-rotation"></canvas>
+    <div class="tools-widget" id="tools-rotation">
+      <div class="tools-widget-title">📐 Matériel élève</div>
+      <div class="tools-list">
+        <div class="tool-item required"><span class="tool-icon">📏</span><span class="tool-name">Règle</span><span class="tool-badge req">requis</span></div>
+        <div class="tool-item optional"><span class="tool-icon">📐</span><span class="tool-name">Équerre</span><span class="tool-badge opt">optionnel</span></div>
+        <div class="tool-item required"><span class="tool-icon">⭕</span><span class="tool-name">Compas</span><span class="tool-badge req">requis</span></div>
+        <div class="tool-item required"><span class="tool-icon">🧭</span><span class="tool-name">Rapporteur</span><span class="tool-badge req">requis</span></div>
+      </div>
+    </div>
+    <div class="zoom-ctrl">
+      <button class="zoom-btn" id="ro-zp">+</button>
+      <div class="zpct" id="ro-zpct">100%</div>
+      <button class="zoom-btn" id="ro-zm">−</button>
+      <button class="zoom-btn" title="Réinitialiser" id="ro-zr">⊙</button>
+    </div>
+    <div class="canvas-hint" id="ro-canvas-hint"></div>
+  </div>
+</div>
+
+</div><!-- #app -->
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════
+//  THÈME
+// ══════════════════════════════════════════
+const root = document.documentElement;
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const dark = root.getAttribute('data-theme') === 'dark';
+  root.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('theme-icon').textContent = dark ? '🌙' : '☀️';
+  document.getElementById('theme-lbl').textContent  = dark ? 'Mode sombre' : 'Mode clair';
+  Object.values(instances).forEach(i => i && i.draw());
+});
+
+function cssVar(n){ return getComputedStyle(root).getPropertyValue(n).trim(); }
+
+// ══════════════════════════════════════════
+//  MATH
+// ══════════════════════════════════════════
+function makeShape(name, cx, cy, sides=5) {
+  const S = {
+    triangle: [[0,-70],[65,45],[-65,45]],
+    maison:   [[-55,45],[-55,-18],[0,-72],[55,-18],[55,45]],
+    fleche:   [[0,-72],[44,0],[16,0],[16,62],[-16,62],[-16,0],[-44,0]],
+    lettre:   [[-40,-70],[40,-70],[40,-38],[0,-38],[0,-8],[34,-8],[34,22],[0,22],[0,70],[-40,70]]
+  };
+  if(name==='polygone'){
+    // Polygone régulier à N côtés, rayon 70
+    const r=70, pts=[];
+    for(let i=0;i<sides;i++){
+      const a=-Math.PI/2+2*Math.PI*i/sides;
+      pts.push([cx+r*Math.cos(a), cy+r*Math.sin(a)]);
+    }
+    return pts;
+  }
+  if(name==='cercle'){
+    // Cercle approché par 64 points (pour les transformations)
+    const r=70, pts=[];
+    for(let i=0;i<64;i++){
+      const a=-Math.PI/2+2*Math.PI*i/64;
+      pts.push([cx+r*Math.cos(a), cy+r*Math.sin(a)]);
+    }
+    return pts;
+  }
+  return (S[name]||S.triangle).map(([x,y])=>[cx+x,cy+y]);
+}
+function rotPt(x,y,cx,cy,deg){
+  const r=deg*Math.PI/180,c=Math.cos(r),s=Math.sin(r),dx=x-cx,dy=y-cy;
+  return [cx+dx*c-dy*s, cy+dx*s+dy*c];
+}
+function reflAxis(x,y,ax,ay,deg){
+  const r=deg*Math.PI/180,c2=Math.cos(2*r),s2=Math.sin(2*r),dx=x-ax,dy=y-ay;
+  return [ax+dx*c2+dy*s2, ay+dx*s2-dy*c2];
+}
+function lerp(a,b,t){ return a+(b-a)*t; }
+
+// ══════════════════════════════════════════
+//  GESTION IMAGE (partagée)
+// ══════════════════════════════════════════
+function setupImageZone(prefix, onLoad) {
+  const zone    = document.getElementById(prefix+'-img-zone');
+  const drop    = document.getElementById(prefix+'-drop');
+  const fileIn  = document.getElementById(prefix+'-file-in');
+  const preview = document.getElementById(prefix+'-img-preview');
+  const sizeEl  = document.getElementById(prefix+'-img-size');
+  const sizeVal = document.getElementById(prefix+'-img-size-v');
+
+  let imgEl = null;
+
+  function loadFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        imgEl = img;
+        preview.src = e.target.result;
+        preview.classList.add('visible');
+        onLoad(img);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  fileIn.addEventListener('change', e => loadFile(e.target.files[0]));
+
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag-over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault(); drop.classList.remove('drag-over');
+    loadFile(e.dataTransfer.files[0]);
+  });
+
+  sizeEl.addEventListener('input', () => {
+    sizeVal.textContent = sizeEl.value;
+    onLoad(imgEl);
+  });
+
+  return {
+    getImg: () => imgEl,
+    getSize: () => +sizeEl.value,
+    show: (v) => zone.classList.toggle('visible', v)
+  };
+}
+
+// ══════════════════════════════════════════
+//  CLASSE DE BASE
+// ══════════════════════════════════════════
+class Geo {
+  constructor(canvasId, coordId, prefix) {
+    this.cv      = document.getElementById(canvasId);
+    this.ctx     = this.cv.getContext('2d');
+    this.coordEl = document.getElementById(coordId);
+    this.prefix  = prefix;
+    this.W = this.H = this.OX = this.OY = 0;
+    this.offset   = [0,0];          // déplacement du polygone / point
+    this._drag    = false;
+    this._dragTgt = null;           // 'shape'|'ptA'|'ptB'|'pt'|'img'
+    this._doff    = [0,0];
+    this.anim     = false;
+    this.animT    = 0;
+    this.animDir  = 1;
+    this.raf      = null;
+    this.showGrid  = true;
+    this.shapeName = 'maison';
+    this.shapeAngle = 0;
+    this.shapeSides = 5;  // nombre de côtés pour polygone régulier
+
+    // Point libre
+    this.ptM  = [-120, 60];
+
+    // Droite : deux points A et B
+    this.ptA  = [-150, 80];
+    this.ptB  = [50, -60];
+
+    // Image
+    this.imgObj   = null;
+    this.imgSize  = 120;
+    this.imgPos   = [-60, -60];     // coin haut-gauche en coords monde
+
+    this._ro = new ResizeObserver(() => this._resize());
+    this._ro.observe(this.cv.parentElement);
+
+    this.cv.addEventListener('mousedown', e => this._dn(this._exy(e)));
+    this.cv.addEventListener('mousemove', e => { this._mv(this._exy(e)); this._updateCursor(this._exy(e)); });
+    window.addEventListener('mouseup', () => { this._drag=false; this._dragTgt=null; });
+    this.cv.addEventListener('touchstart', e=>{e.preventDefault();this._dn(this._txy(e));},{passive:false});
+    this.cv.addEventListener('touchmove',  e=>{e.preventDefault();this._mv(this._txy(e));},{passive:false});
+    window.addEventListener('touchend', () => { this._drag=false; this._dragTgt=null; });
+
+    // Gestion image
+    this.imgCtrl = setupImageZone(prefix, (img) => {
+      this.imgObj  = img;
+      this.imgSize = document.getElementById(prefix+'-img-size') ? +document.getElementById(prefix+'-img-size').value : 120;
+      this.draw();
+    });
+
+    // Sélecteur de forme
+    document.getElementById(prefix+'-shape').addEventListener('change', e => {
+      this.shapeName  = e.target.value;
+      this.shapeAngle = 0;
+      this.imgCtrl.show(this.shapeName === 'image');
+      const sidesZone=document.getElementById(prefix+'-sides-zone');
+      if(sidesZone) sidesZone.classList.toggle('visible', this.shapeName==='polygone');
+      this._updateHint();
+      this.draw();
+    });
+    // Slider côtés polygone
+    const sidesEl=document.getElementById(prefix+'-sides');
+    const sidesVal=document.getElementById(prefix+'-sides-v');
+    if(sidesEl){
+      sidesEl.addEventListener('input',()=>{
+        this.shapeSides=+sidesEl.value;
+        if(sidesVal) sidesVal.textContent=sidesEl.value;
+        this.draw();
+      });
+    }
+  }
+
+  _exy(e){ const r=this.cv.getBoundingClientRect(); return [e.clientX-r.left,e.clientY-r.top]; }
+  _txy(e){ const t=e.touches[0]; return this._exy({clientX:t.clientX,clientY:t.clientY}); }
+  s2w(sx,sy){const z=this._zoom||1,px=this._panX||0,py=this._panY||0;return[(sx-this.OX-px)/z,(this.OY+py-sy)/z];}
+  w2s(wx,wy){const z=this._zoom||1,px=this._panX||0,py=this._panY||0;return[this.OX+px+wx*z,this.OY+py-wy*z];}
+
+  _resize(){
+    const wrap=this.cv.parentElement, bar=wrap.querySelector('.canvas-bar');
+    const barH=bar?bar.offsetHeight:32, W=wrap.clientWidth, H=wrap.clientHeight-barH;
+    if(W<=0||H<=0) return;
+    this.cv.width=W; this.cv.height=H; this.W=W; this.H=H; this.OX=W/2; this.OY=H/2;
+    this.draw();
+  }
+
+  pts(){
+    const raw = makeShape(this.shapeName, 0, 0, this.shapeSides||5);
+    const a   = this.shapeAngle;
+    const cos = Math.cos(a), sin = Math.sin(a);
+    const rotated = raw.map(([x,y]) => [
+      x*cos - y*sin + this.offset[0],
+      x*sin + y*cos + this.offset[1]
+    ]);
+    return rotated;
+  }
+  centroid(pts){ return [pts.reduce((s,p)=>s+p[0],0)/pts.length, pts.reduce((s,p)=>s+p[1],0)/pts.length]; }
+
+  // Labels des sommets selon la forme (pas pour cercle)
+  ptLabels(){
+    if(this.shapeName==='cercle') return [];
+    const n = Math.min(this.pts().length, 10);
+    const letters = ['A','B','C','D','E','F','G','H','I','J'];
+    return letters.slice(0,n);
+  }
+  ptLabelsImg(){
+    return this.ptLabels().map(l => l+"'");
+  }
+
+  // Détecte quel objet on commence à dragger
+  _dn([sx,sy]){
+    const [wx,wy]=this.s2w(sx,sy);
+    const HIT=18/(this._zoom||1);
+    if(this.shapeName==='point'){
+      if(Math.hypot(wx-this.ptM[0],wy-this.ptM[1])<HIT){ this._drag=true; this._dragTgt='pt'; this._doff=[wx-this.ptM[0],wy-this.ptM[1]]; return; }
+    } else if(this.shapeName==='droite'){
+      if(Math.hypot(wx-this.ptA[0],wy-this.ptA[1])<HIT){ this._drag=true; this._dragTgt='ptA'; this._doff=[wx-this.ptA[0],wy-this.ptA[1]]; return; }
+      if(Math.hypot(wx-this.ptB[0],wy-this.ptB[1])<HIT){ this._drag=true; this._dragTgt='ptB'; this._doff=[wx-this.ptB[0],wy-this.ptB[1]]; return; }
+      // drag du milieu pour tout bouger
+      const mx=(this.ptA[0]+this.ptB[0])/2, my=(this.ptA[1]+this.ptB[1])/2;
+      if(Math.hypot(wx-mx,wy-my)<50){ this._drag=true; this._dragTgt='droite'; this._doff=[wx-mx,wy-my]; return; }
+    } else if(this.shapeName==='image'){
+      const s=this.imgSize;
+      const [px,py]=this.imgPos;
+      const [spx,spy]=this.w2s(px,py);
+      if(sx>=spx&&sx<=spx+s&&sy>=spy&&sy<=spy+s){ this._drag=true; this._dragTgt='img'; this._doff=[wx-px,wy-py]; return; }
+    } else {
+      const [cx,cy]=this.centroid(this.pts());
+      const dist=Math.hypot(wx-cx,wy-cy);
+      if(dist<50){
+        // Zone centrale : déplacer
+        this._drag=true; this._dragTgt='shape';
+        this._doff=[wx-this.offset[0],wy-this.offset[1]];
+      } else if(dist<110){
+        // Zone périphérique : faire pivoter autour du centroïde
+        this._drag=true; this._dragTgt='rotate';
+        this._rotCenter=[cx,cy];
+        this._rotAngle0=this.shapeAngle;
+        this._rotMouse0=Math.atan2(wy-cy, wx-cx); // angle initial souris
+      }
+    }
+  }
+
+  _mv([sx,sy]){
+    const [wx,wy]=this.s2w(sx,sy);
+    if(this.coordEl) this.coordEl.textContent=`(${Math.round(wx)}, ${Math.round(wy)})`;
+    if(!this._drag) return;
+    if(this._dragTgt==='shape'){ this.offset=[wx-this._doff[0],wy-this._doff[1]]; }
+    else if(this._dragTgt==='rotate'){
+      const [cx,cy]=this._rotCenter;
+      const mouseAngle=Math.atan2(wy-cy, wx-cx);
+      this.shapeAngle=this._rotAngle0+(mouseAngle-this._rotMouse0);
+    }
+    else if(this._dragTgt==='pt'){ this.ptM=[wx-this._doff[0],wy-this._doff[1]]; }
+    else if(this._dragTgt==='ptA'){ this.ptA=[wx-this._doff[0],wy-this._doff[1]]; }
+    else if(this._dragTgt==='ptB'){ this.ptB=[wx-this._doff[0],wy-this._doff[1]]; }
+    else if(this._dragTgt==='droite'){
+      const dx=wx-this._doff[0]-( (this.ptA[0]+this.ptB[0])/2 );
+      const dy=wy-this._doff[1]-( (this.ptA[1]+this.ptB[1])/2 );
+      this.ptA=[this.ptA[0]+dx,this.ptA[1]+dy];
+      this.ptB=[this.ptB[0]+dx,this.ptB[1]+dy];
+      this._doff=[wx-(this.ptA[0]+this.ptB[0])/2, wy-(this.ptA[1]+this.ptB[1])/2];
+    }
+    else if(this._dragTgt==='img'){ this.imgPos=[wx-this._doff[0],wy-this._doff[1]]; }
+    this.draw();
+  }
+
+  _updateCursor([sx,sy]){
+    if(this._drag) return;
+    if(!['triangle','maison','fleche','lettre'].includes(this.shapeName)) return;
+    const [wx,wy]=this.s2w(sx,sy);
+    const HIT=18/(this._zoom||1);
+    // Curseur grab sur le point M du vecteur
+    if(this.vecPos && this.showVec){
+      const [vmx,vmy]=this.vecPos;
+      if(Math.hypot(wx-vmx,wy-vmy)<HIT){ this.cv.style.cursor='grab'; return; }
+    }
+    const [cx,cy]=this.centroid(this.pts());
+    const dist=Math.hypot(wx-cx,wy-cy);
+    if(dist<50)        this.cv.style.cursor='grab';
+    else if(dist<110)  this.cv.style.cursor='crosshair';
+    else               this.cv.style.cursor='crosshair';
+  }
+
+  _updateHint(){
+    const hints = {
+      'triangle':'Centre = déplacer · Bord = faire pivoter · Curseurs pour transformer',
+      'maison':'Centre = déplacer · Bord = faire pivoter · Curseurs pour transformer',
+      'fleche':'Centre = déplacer · Bord = faire pivoter',
+      'lettre':'Centre = déplacer · Bord = faire pivoter',
+      'polygone':'Centre = déplacer · Bord = faire pivoter',
+      'cercle':'Glisser le cercle',
+      'point':'Glisser le point M (●) sur le canevas',
+      'droite':'Glisser A ou B pour orienter · milieu pour déplacer',
+      'image':'Glisser l\'image · ajuster la taille dans le panneau'
+    };
+    const bar = document.getElementById(this.prefix+'-hint-bar');
+    if(bar) bar.textContent = hints[this.shapeName]||'';
+    const ch = document.getElementById(this.prefix+'-canvas-hint');
+    if(ch){
+      if(this.shapeName==='point') ch.textContent='💡 Glisser le point bleu M';
+      else if(this.shapeName==='droite') ch.textContent='💡 Glisser A ou B pour orienter la droite';
+      else if(this.shapeName==='image') ch.textContent='💡 Importer une image dans le panneau gauche';
+      else ch.textContent='';
+    }
+  }
+
+  // ── helpers dessin ──
+  drawGrid(){
+    const {ctx,W,H,OX,OY}=this;
+    const z=this._zoom||1,px=this._panX||0,py=this._panY||0;
+    const step=50*z;
+    let ox=(OX+px)%step; if(ox<0)ox+=step;
+    let oy=(OY+py)%step; if(oy<0)oy+=step;
+    ctx.save();
+    ctx.strokeStyle=cssVar('--grid-minor'); ctx.lineWidth=1;
+    for(let x=ox;x<W;x+=step){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=oy;y<H;y+=step){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+    ctx.strokeStyle=cssVar('--grid-major'); ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(OX+px,0);ctx.lineTo(OX+px,H);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,OY+py);ctx.lineTo(W,OY+py);ctx.stroke();
+    ctx.restore();
+  }
+
+  // Petite poignée de rotation (flèche circulaire) visible autour de la figure
+  drawRotHandle(cx,cy,radius){ /* indicateur visuel désactivé */ }
+
+  drawPoly(pts,fill,stroke,lw=2.5,isCircle=false){
+    if(!pts.length) return;
+    const {ctx}=this;
+    ctx.save();
+    if(isCircle && pts.length>=3){
+      // Dessiner comme un arc lisse plutôt que segments
+      // Trouver le centre et le rayon depuis les points
+      const cx=pts.reduce((s,p)=>s+p[0],0)/pts.length;
+      const cy=pts.reduce((s,p)=>s+p[1],0)/pts.length;
+      const r=Math.hypot(pts[0][0]-cx,pts[0][1]-cy);
+      const [scx,scy]=this.w2s(cx,cy);
+      const rs=r*(this._zoom||1);
+      ctx.beginPath();ctx.arc(scx,scy,rs,0,Math.PI*2);
+      ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke();
+    } else {
+      const[sx,sy]=this.w2s(pts[0][0],pts[0][1]);
+      ctx.beginPath(); ctx.moveTo(sx,sy);
+      for(let i=1;i<pts.length;i++){const[x,y]=this.w2s(pts[i][0],pts[i][1]);ctx.lineTo(x,y);}
+      ctx.closePath(); ctx.fillStyle=fill; ctx.fill(); ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  drawDot(wx,wy,col,r=5,lbl=''){
+    const [sx,sy]=this.w2s(wx,wy), {ctx}=this;
+    ctx.save();
+    ctx.beginPath(); ctx.arc(sx,sy,r,0,Math.PI*2);
+    ctx.fillStyle=col; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=1.5; ctx.stroke();
+    if(lbl){
+      ctx.font="bold 14px 'Space Mono',monospace"; ctx.fillStyle=col;
+      const isDark = root.getAttribute('data-theme')==='dark';
+      ctx.strokeStyle=isDark?'rgba(0,0,0,.7)':'rgba(255,255,255,.8)'; ctx.lineWidth=3;
+      ctx.strokeText(lbl,sx+11,sy-9); ctx.fillText(lbl,sx+11,sy-9);
+    }
+    ctx.restore();
+  }
+
+  drawArrow(wx1,wy1,wx2,wy2,col,lw=3){
+    const[sx1,sy1]=this.w2s(wx1,wy1),[sx2,sy2]=this.w2s(wx2,wy2);
+    const ang=Math.atan2(sy2-sy1,sx2-sx1),hl=15,{ctx}=this;
+    ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.fillStyle=col;
+    ctx.shadowColor=col; ctx.shadowBlur=6;
+    ctx.beginPath();ctx.moveTo(sx1,sy1);ctx.lineTo(sx2,sy2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(sx2,sy2);
+    ctx.lineTo(sx2-hl*Math.cos(ang-.4),sy2-hl*Math.sin(ang-.4));
+    ctx.lineTo(sx2-hl*Math.cos(ang+.4),sy2-hl*Math.sin(ang+.4));
+    ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+
+  // Dessine une droite infinie passant par deux points monde
+  drawLine(ax,ay,bx,by,col,lw,dash=[]){
+    const {ctx,W,H}=this, len=Math.max(W,H)*2;
+    const dx=bx-ax,dy=by-ay,d=Math.hypot(dx,dy);
+    if(d<1) return;
+    const ux=dx/d,uy=dy/d;
+    const [s1x,s1y]=this.w2s(ax-ux*len,ay-uy*len);
+    const [s2x,s2y]=this.w2s(ax+ux*len,ay+uy*len);
+    ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.setLineDash(dash);
+    ctx.shadowColor=col; ctx.shadowBlur=6;
+    ctx.beginPath();ctx.moveTo(s1x,s1y);ctx.lineTo(s2x,s2y);ctx.stroke();
+    ctx.setLineDash([]); ctx.restore();
+  }
+
+  // Dessine le segment de la droite avec ses points-poignées A et B
+  drawDroiteOrig(ax,ay,bx,by){
+    this.drawLine(ax,ay,bx,by,'#4f8ef7',2.5,[]);
+    this.drawDot(ax,ay,'#4f8ef7',7,'A');
+    this.drawDot(bx,by,'#4f8ef7',7,'B');
+  }
+
+  drawDroiteImg(ax,ay,bx,by){
+    this.drawLine(ax,ay,bx,by,'#f74f8e',2.5,[]);
+    this.drawDot(ax,ay,'#f74f8e',7,"A'");
+    this.drawDot(bx,by,'#f74f8e',7,"B'");
+  }
+
+
+
+  startAnim(btn){
+    if(this.anim){
+      this.anim=false; cancelAnimationFrame(this.raf);
+      btn.textContent=btn.textContent.replace('⏹','▶');
+      this.animT=0; this.animDir=1; this.draw(); return;
+    }
+    this.anim=true; btn.textContent=btn.textContent.replace('▶','⏹');
+    const loop=()=>{
+      if(!this.anim) return;
+      this.animT+=.013*this.animDir;
+      if(this.animT>=1){this.animT=1;this.animDir=-1;}
+      if(this.animT<=0){this.animT=0;this.animDir=1;}
+      this.draw(); this.raf=requestAnimationFrame(loop);
+    };
+    loop();
+  }
+
+  bindToggle(id,prop,init){
+    this[prop]=init;
+    const btn=document.getElementById(id);
+    if(!btn) return;
+    btn.classList.toggle('on',init);
+    btn.addEventListener('click',()=>{ this[prop]=!this[prop]; btn.classList.toggle('on',this[prop]); this.draw(); });
+  }
+
+  bindSlider(id,prop,valId,suffix=''){
+    const el=document.getElementById(id),vel=document.getElementById(valId);
+    if(!el) return;
+    if(vel) vel.textContent=el.value+suffix;
+    el.addEventListener('input',()=>{ this[prop]=+el.value; if(vel) vel.textContent=el.value+suffix; this.draw(); });
+  }
+
+  // Rendu de fond
+  clearBg(){
+    const {ctx,W,H}=this;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle=cssVar('--canvas-bg');
+    ctx.fillRect(0,0,W,H);
+  }
+
+
+  // Codage de longueurs identiques sur un segment de construction [M, M'].
+  // Les tirets obliques sont placés de PART ET D'AUTRE du point de croisement
+  // (pied de perpendiculaire sur l'axe pour la symétrie axiale,
+  //  milieu du segment = centre O pour la symétrie centrale).
+  // nTicks = rang (1 à 12) : nTicks tirets de chaque côté, groupés près du pied/centre.
+  // footX, footY = point de croisement (pied de perp ou centre O)
+  // x1,y1 = point M   x2,y2 = point M' (son symétrique)
+  // Codage des longueurs égales sur le segment de construction [M, M'].
+  // Les nTicks tirets sont SERRÉS et leur groupe est centré au MILIEU
+  // de chaque demi-segment (entre le point et le pied/centre).
+  // Ainsi le groupe est à égale distance du point ET du pied/centre.
+  // footX,footY = pied de perpendiculaire (axiale) ou centre O (centrale).
+  _codeMilieu(x1,y1,x2,y2,nTicks,footX,footY){
+    const col=cssVar('--c-axiale-mid');
+    const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy);
+    if(len<1)return;
+    const ux=dx/len,uy=dy/len;
+    const {ctx}=this;
+    const z=this._zoom||1;
+    const L=12/z;           // longueur d'un tiret
+    const sp=4/z;           // espacement serré entre tirets du groupe
+    const tiltAngle=Math.PI/3;
+    const tx=ux*Math.cos(tiltAngle)-uy*Math.sin(tiltAngle);
+    const ty=ux*Math.sin(tiltAngle)+uy*Math.cos(tiltAngle);
+    const fx=footX!==undefined?footX:(x1+x2)/2;
+    const fy=footY!==undefined?footY:(y1+y2)/2;
+    const sFoot=((fx-x1)*dx+(fy-y1)*dy)/len;
+    // Pour chaque côté, le groupe est centré au milieu du demi-segment
+    // Côté M  : centre du groupe à sFoot/2
+    // Côté M' : centre du groupe à (sFoot+len)/2
+    ctx.save();ctx.strokeStyle=col;ctx.lineWidth=2;ctx.shadowColor=col;ctx.shadowBlur=4;
+    for(const [sPoint, sPied] of [[0, sFoot],[len, sFoot]]){
+      const sMid=(sPoint+sPied)/2; // milieu du demi-segment
+      // Tirets centrés sur sMid, espacés de sp
+      for(let k=0;k<nTicks;k++){
+        const s=sMid+(k-(nTicks-1)/2)*sp;
+        if(s<=0||s>=len) continue;
+        const cx=x1+ux*s, cy=y1+uy*s;
+        const [pax,pay]=this.w2s(cx-tx*L/2,cy-ty*L/2);
+        const [pbx,pby]=this.w2s(cx+tx*L/2,cy+ty*L/2);
+        ctx.beginPath();ctx.moveTo(pax,pay);ctx.lineTo(pbx,pby);ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  // Calcule le rang (1-based) de chaque segment parmi un tableau de longueurs.
+  // Deux segments quasi-égaux (< 2 unités de différence) reçoivent le même rang.
+  // Retourne un tableau de même taille que lengths, contenant le rang (nTicks) de chaque segment.
+  _computeRanks(lengths){
+    const EPS=2; // seuil d'égalité en coords monde
+    // Trier les valeurs uniques
+    const sorted=[...lengths].sort((a,b)=>a-b);
+    const groups=[]; // chaque groupe = longueur représentative
+    for(const v of sorted){
+      if(groups.length===0||v-groups[groups.length-1]>EPS) groups.push(v);
+    }
+    // Rang = indice dans groups + 1
+    return lengths.map(l=>{
+      const g=groups.findIndex(g=>Math.abs(g-l)<=EPS);
+      return g+1;
+    });
+  }
+
+  // Codage angle droit au pied de la perpendiculaire.
+  // Construit le carré directement en coords monde depuis les vecteurs réels
+  // de l'axe et du segment [M,M'], s'adapte à toute orientation.
+  // footX,footY = pied   sx1,sy1→sx2,sy2 = direction de l'axe (P→Q)
+  // mx1,my1 = point M   mx2,my2 = point M'
+  _codeAngleDroit(footX,footY, ax1x,ax1y,ax2x,ax2y, mx1,my1,mx2,my2){
+    const col=cssVar('--c-axiale-mid');
+    const {ctx}=this;
+    const sq=10/(this._zoom||1);
+    // Vecteur unitaire de l'axe
+    const adx=ax2x-ax1x,ady=ax2y-ax1y,al=Math.hypot(adx,ady);
+    if(al<1)return;
+    const uax=adx/al,uay=ady/al;
+    // Vecteur unitaire du segment M→M' (direction de la perp à l'axe)
+    const sdx=mx2-mx1,sdy=my2-my1,sl=Math.hypot(sdx,sdy);
+    if(sl<1)return;
+    const usx=sdx/sl,usy=sdy/sl;
+    // Le carré se dessine à partir du pied :
+    // un côté le long de l'axe (uax), un côté le long du segment (usx)
+    // On choisit le quadrant tel que le carré pointe vers M (côté M du pied)
+    // direction vers M depuis le pied : signe opposé à usx si pied est entre M et M'
+    const toM_x=mx1-footX,toM_y=my1-footY;
+    const signS=(toM_x*usx+toM_y*usy)>=0?1:-1;
+    // direction le long de l'axe : on choisit arbitrairement +uax
+    // (les deux quadrants adjacents à M donnent un carré valide)
+    const signA=1;
+    // 4 coins du carré :
+    // P0 = pied (origine)
+    // P1 = pied + sq*signA*uax
+    // P2 = pied + sq*signA*uax + sq*signS*usx
+    // P3 = pied + sq*signS*usx
+    const pts=[
+      [footX,                                footY                               ],
+      [footX+sq*signA*uax,                   footY+sq*signA*uay                  ],
+      [footX+sq*signA*uax+sq*signS*usx,      footY+sq*signA*uay+sq*signS*usy    ],
+      [footX+sq*signS*usx,                   footY+sq*signS*usy                  ],
+    ];
+    const sp=pts.map(([wx,wy])=>this.w2s(wx,wy));
+    ctx.save();ctx.strokeStyle=col;ctx.lineWidth=2;ctx.shadowColor=col;ctx.shadowBlur=4;
+    // Dessiner seulement les deux côtés intérieurs (P1→P2→P3, pas P0)
+    ctx.beginPath();
+    ctx.moveTo(sp[1][0],sp[1][1]);
+    ctx.lineTo(sp[2][0],sp[2][1]);
+    ctx.lineTo(sp[3][0],sp[3][1]);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  draw(){}
+}
+
+// ══════════════════════════════════════════
+//  SYMÉTRIE AXIALE
+// ══════════════════════════════════════════
+class Axiale extends Geo {
+  constructor(){
+    super('c-axiale','ax-coord','ax');
+    // P et Q DÉFINISSENT la droite (d) — ils peuvent se déplacer librement.
+    // axAngle et axPos n'en sont que des dérivés (pour les sliders).
+    this.axP1=[0,-150]; this.axP2=[0,150];
+    this.axAngle=90; this.axPos=0;
+    this.offset=[-140,0];
+    this.ptM=[-120,60]; this.ptA=[-160,80]; this.ptB=[-20,-60]; this.imgPos=[-60,-60];
+    this._syncAxisFromPoints();
+    this.bindToggle('ax-tg-grid','showGrid',true);
+    this.bindToggle('ax-tg-axis','showAxis',true);
+    this.bindToggle('ax-tg-proj','showProj',true);
+    this._initAxisSliders();
+    document.getElementById('ax-anim').addEventListener('click',e=>this.startAnim(e.currentTarget));
+    this._updateHint();
+  }
+
+  // P et Q → axAngle, axPos (pour les sliders et reflAxis)
+  _syncAxisFromPoints(){
+    const [x1,y1]=this.axP1,[x2,y2]=this.axP2;
+    const dx=x2-x1,dy=y2-y1;
+    if(Math.hypot(dx,dy)<1) return;
+    this.axAngle=((Math.atan2(-dy,dx)*180/Math.PI)%180+180)%180;
+    const rad=this.axAngle*Math.PI/180;
+    const nx=-Math.sin(rad),ny=-Math.cos(rad);
+    this.axPos=(x1+x2)/2*nx+(y1+y2)/2*ny;
+  }
+
+  // axAngle, axPos → repositionne P et Q sur la nouvelle droite (après slider)
+  _syncPointsFromAxis(){
+    const rad=this.axAngle*Math.PI/180;
+    const ax=this.axPos*Math.cos((this.axAngle-90)*Math.PI/180);
+    const ay=this.axPos*Math.sin((this.axAngle-90)*Math.PI/180);
+    const ux=Math.cos(rad),uy=-Math.sin(rad);
+    // Projeter P et Q sur la nouvelle droite en conservant leur abscisse curviligne
+    const proj=(px,py)=>{ const t=(px-ax)*ux+(py-ay)*uy; return [ax+t*ux,ay+t*uy]; };
+    this.axP1=proj(this.axP1[0],this.axP1[1]);
+    this.axP2=proj(this.axP2[0],this.axP2[1]);
+    const dist=Math.hypot(this.axP2[0]-this.axP1[0],this.axP2[1]-this.axP1[1]);
+    if(dist<60){ this.axP1=[ax-100*ux,ay+100*uy]; this.axP2=[ax+100*ux,ay-100*uy]; }
+  }
+
+  _initAxisSliders(){
+    const elA=document.getElementById('ax-angle'),vA=document.getElementById('ax-angle-v');
+    const elP=document.getElementById('ax-pos'),  vP=document.getElementById('ax-pos-v');
+    if(elA){elA.value=Math.round(this.axAngle); if(vA) vA.textContent=Math.round(this.axAngle)+'°'; elA.addEventListener('input',()=>{ this.axAngle=+elA.value; if(vA) vA.textContent=elA.value+'°'; this._syncPointsFromAxis(); this.draw(); });}
+    if(elP){elP.value=Math.round(this.axPos);   if(vP) vP.textContent=Math.round(this.axPos);        elP.addEventListener('input',()=>{ this.axPos=+elP.value;   if(vP) vP.textContent=elP.value;     this._syncPointsFromAxis(); this.draw(); });}
+  }
+
+  _updateAxisSliders(){
+    const elA=document.getElementById('ax-angle'),vA=document.getElementById('ax-angle-v');
+    const elP=document.getElementById('ax-pos'),  vP=document.getElementById('ax-pos-v');
+    const a=((Math.round(this.axAngle)%180)+180)%180;
+    const p=Math.max(-200,Math.min(200,Math.round(this.axPos)));
+    if(elA){elA.value=a; if(vA)vA.textContent=a+'°';}
+    if(elP){elP.value=p; if(vP)vP.textContent=p;}
+  }
+
+  _dn([sx,sy]){
+    if(this.showAxis){
+      const [wx,wy]=this.s2w(sx,sy),HIT=18/(this._zoom||1);
+      if(Math.hypot(wx-this.axP1[0],wy-this.axP1[1])<HIT){
+        this._drag=true;this._dragTgt='axP1';this._doff=[wx-this.axP1[0],wy-this.axP1[1]];return;
+      }
+      if(Math.hypot(wx-this.axP2[0],wy-this.axP2[1])<HIT){
+        this._drag=true;this._dragTgt='axP2';this._doff=[wx-this.axP2[0],wy-this.axP2[1]];return;
+      }
+    }
+    super._dn([sx,sy]);
+  }
+
+  _mv([sx,sy]){
+    if(this._drag&&(this._dragTgt==='axP1'||this._dragTgt==='axP2')){
+      const [wx,wy]=this.s2w(sx,sy);
+      // P ou Q suit librement la souris — ils définissent la droite
+      if(this._dragTgt==='axP1') this.axP1=[wx-this._doff[0],wy-this._doff[1]];
+      else                         this.axP2=[wx-this._doff[0],wy-this._doff[1]];
+      // Éviter la singularité P=Q
+      if(Math.hypot(this.axP2[0]-this.axP1[0],this.axP2[1]-this.axP1[1])<15){
+        if(this._dragTgt==='axP1') this.axP1=[this.axP2[0]+15,this.axP2[1]];
+        else                         this.axP2=[this.axP1[0]+15,this.axP1[1]];
+      }
+      this._syncAxisFromPoints();
+      this._updateAxisSliders();
+      if(this.coordEl) this.coordEl.textContent=`(${Math.round(wx)},${Math.round(wy)})`;
+      this.draw(); return;
+    }
+    super._mv([sx,sy]);
+  }
+
+  // Réflexion d'un point par rapport à la droite (P,Q)
+  _reflByPQ(x,y){
+    const [x1,y1]=this.axP1,[x2,y2]=this.axP2;
+    const dx=x2-x1,dy=y2-y1,len2=dx*dx+dy*dy;
+    if(len2<1) return [x,y];
+    const t=((x-x1)*dx+(y-y1)*dy)/len2;
+    return [2*(x1+t*dx)-x, 2*(y1+t*dy)-y];
+  }
+
+  // Pied de la perpendiculaire depuis (x,y) sur la droite (P,Q)
+  _footPQ(x,y){
+    const [x1,y1]=this.axP1,[x2,y2]=this.axP2;
+    const dx=x2-x1,dy=y2-y1,len2=dx*dx+dy*dy;
+    if(len2<1) return [(x1+x2)/2,(y1+y2)/2];
+    const t=((x-x1)*dx+(y-y1)*dy)/len2;
+    return [x1+t*dx,y1+t*dy];
+  }
+
+  _applyTransform(x,y,t){
+    const [ix,iy]=this._reflByPQ(x,y);
+    return [lerp(x,ix,t),lerp(y,iy,t)];
+  }
+
+  draw(){
+    const {ctx,W,H}=this;if(!W)return;
+    this.clearBg();if(this.showGrid)this.drawGrid();
+    const axRad=this.axAngle*Math.PI/180;
+    const t=this.anim?this.animT:1;
+
+    if(this.showAxis){
+      // Droite infinie passant par P et Q
+      const [x1,y1]=this.axP1,[x2,y2]=this.axP2;
+      const dx=x2-x1,dy=y2-y1,d=Math.hypot(dx,dy);
+      if(d>1){
+        const ux=dx/d,uy=dy/d,len=Math.max(W,H)*2;
+        const [s1x,s1y]=this.w2s(x1-ux*len,y1-uy*len);
+        const [s2x,s2y]=this.w2s(x1+ux*len,y1+uy*len);
+        ctx.save();ctx.strokeStyle='#4ff7b0';ctx.lineWidth=3;ctx.shadowColor='#4ff7b0';ctx.shadowBlur=10;
+        ctx.beginPath();ctx.moveTo(s1x,s1y);ctx.lineTo(s2x,s2y);ctx.stroke();
+        // Label (d) près de Q
+        const [lx,ly]=this.w2s(x2+ux*30,y2+uy*30);
+        ctx.font="bold 15px 'Space Mono',monospace";ctx.fillStyle='#4ff7b0';ctx.shadowBlur=6;
+        ctx.fillText('(d)',lx+6,ly-6);ctx.restore();
+      }
+      // Poignées P et Q
+      const isDark=root.getAttribute('data-theme')==='dark';
+      [[this.axP1,'P'],[this.axP2,'Q']].forEach(([[px,py],lbl])=>{
+        const [spx,spy]=this.w2s(px,py);
+        ctx.save();
+        ctx.fillStyle='#4ff7b0';ctx.strokeStyle='rgba(255,255,255,0.8)';
+        ctx.shadowColor='#4ff7b0';ctx.shadowBlur=10;ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(spx,spy,9,0,Math.PI*2);ctx.fill();ctx.stroke();
+        ctx.font="bold 13px 'Space Mono',monospace";ctx.fillStyle='#4ff7b0';ctx.shadowBlur=6;
+        ctx.strokeStyle=isDark?'rgba(0,0,0,.7)':'rgba(255,255,255,.8)';ctx.lineWidth=3;
+        ctx.strokeText(lbl,spx+12,spy-9);ctx.fillText(lbl,spx+12,spy-9);
+        ctx.restore();
+      });
+    }
+
+    if(this.shapeName==='point'){
+      const [ix,iy]=this._applyTransform(this.ptM[0],this.ptM[1],t);
+      if(this.showProj){
+        const [rx,ry]=this._reflByPQ(this.ptM[0],this.ptM[1]);
+        const [fx,fy]=this._footPQ(this.ptM[0],this.ptM[1]);
+        ctx.save();ctx.strokeStyle=cssVar('--c-axiale-proj');ctx.lineWidth=2.5;ctx.setLineDash([7,5]);
+        ctx.shadowColor=cssVar('--c-axiale-proj');ctx.shadowBlur=8;
+        const [s1x,s1y]=this.w2s(this.ptM[0],this.ptM[1]),[s2x,s2y]=this.w2s(rx,ry);
+        ctx.beginPath();ctx.moveTo(s1x,s1y);ctx.lineTo(s2x,s2y);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+        const segRad=Math.atan2(-(ry-this.ptM[1]),rx-this.ptM[0]);
+        this._codeMilieu(this.ptM[0],this.ptM[1],rx,ry,1,fx,fy);
+        this._codeAngleDroit(fx,fy,this.axP1[0],this.axP1[1],this.axP2[0],this.axP2[1],this.ptM[0],this.ptM[1],rx,ry);
+      }
+      this.drawDot(this.ptM[0],this.ptM[1],'#4f8ef7',8,'M');
+      this.drawDot(ix,iy,'#f74f8e',8,"M'");
+    }
+    else if(this.shapeName==='droite'){
+      const [iax2,iay2]=this._reflByPQ(this.ptA[0],this.ptA[1]);
+      const [ibx,iby]=this._reflByPQ(this.ptB[0],this.ptB[1]);
+      const [iiax,iiay]=[lerp(this.ptA[0],iax2,t),lerp(this.ptA[1],iay2,t)];
+      const [iibx,iiby]=[lerp(this.ptB[0],ibx,t),lerp(this.ptB[1],iby,t)];
+      if(this.showProj){
+        const segs=[[this.ptA[0],this.ptA[1],iax2,iay2],[this.ptB[0],this.ptB[1],ibx,iby]];
+        const lengths=segs.map(([x,y,ix2,iy2])=>Math.hypot(ix2-x,iy2-y));
+        const ranks=this._computeRanks(lengths);
+        segs.forEach(([x,y,ix2,iy2],si)=>{
+          const [fx,fy]=this._footPQ(x,y);
+          ctx.save();ctx.strokeStyle=cssVar('--c-axiale-proj');ctx.lineWidth=2;ctx.setLineDash([6,4]);
+          ctx.shadowColor=cssVar('--c-axiale-proj');ctx.shadowBlur=7;
+          const [s1x,s1y]=this.w2s(x,y),[s2x,s2y]=this.w2s(ix2,iy2);
+          ctx.beginPath();ctx.moveTo(s1x,s1y);ctx.lineTo(s2x,s2y);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+          const segRad=Math.atan2(-(iy2-y),ix2-x);
+          this._codeMilieu(x,y,ix2,iy2,ranks[si],fx,fy);
+          this._codeAngleDroit(fx,fy,this.axP1[0],this.axP1[1],this.axP2[0],this.axP2[1],x,y,ix2,iy2);
+        });
+      }
+      this.drawDroiteOrig(this.ptA[0],this.ptA[1],this.ptB[0],this.ptB[1]);
+      this.drawDroiteImg(iiax,iiay,iibx,iiby);
+    }
+    else if(this.shapeName==='image'){
+      const s=this.imgSize,[px,py]=this.imgPos,cx=px+s/2,cy=py-s/2;
+      const [icx,icy]=this._reflByPQ(cx,cy);
+      const ang=this.axAngle;
+      if(this.imgObj){
+        const [spx,spy]=this.w2s(px,py);
+        ctx.save();ctx.globalAlpha=1;ctx.drawImage(this.imgObj,spx,spy,s,s);
+        ctx.strokeStyle='#4f8ef7';ctx.lineWidth=2.5;ctx.strokeRect(spx,spy,s,s);ctx.restore();
+        const [isx,isy]=this.w2s(icx,icy);
+        ctx.save();ctx.globalAlpha=0.55;ctx.translate(isx,isy);
+        ctx.rotate(-(ang*2)*Math.PI/180);ctx.scale(-1,1);
+        ctx.drawImage(this.imgObj,-s/2,-s/2,s,s);ctx.restore();
+      } else {this._drawImgPlaceholder(px,py,s);}
+    }
+    else {
+      const orig=this.pts();
+      const full=orig.map(([x,y])=>this._reflByPQ(x,y));
+      const interp=orig.map(([x,y],i)=>[lerp(x,full[i][0],t),lerp(y,full[i][1],t)]);
+      if(this.showProj){
+        const pairs = this.shapeName==='cercle'
+          ? [[this.centroid(orig), this.centroid(full)]]
+          : orig.map(([x,y],i)=>[[x,y],full[i]]);
+        const lengths=pairs.map(([[x,y],[ix,iy]])=>Math.hypot(ix-x,iy-y));
+        const ranks=this._computeRanks(lengths);
+        pairs.forEach(([[x,y],[ix,iy]],pi)=>{
+          const [fx,fy]=this._footPQ(x,y);
+          ctx.save();ctx.strokeStyle=cssVar('--c-axiale-proj');ctx.lineWidth=2.5;ctx.setLineDash([7,5]);
+          ctx.shadowColor=cssVar('--c-axiale-proj');ctx.shadowBlur=7;
+          const [s1x,s1y]=this.w2s(x,y),[s2x,s2y]=this.w2s(ix,iy);
+          ctx.beginPath();ctx.moveTo(s1x,s1y);ctx.lineTo(s2x,s2y);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+          const segRad=Math.atan2(-(iy-y),ix-x);
+          this._codeMilieu(x,y,ix,iy,ranks[pi],fx,fy);
+          this._codeAngleDroit(fx,fy,this.axP1[0],this.axP1[1],this.axP2[0],this.axP2[1],x,y,ix,iy);
+        });
+      }
+      this.drawPoly(orig,'rgba(79,142,247,.18)','#4f8ef7',3,this.shapeName==='cercle');
+      this.drawPoly(interp,'rgba(247,79,142,.18)','#f74f8e',3,this.shapeName==='cercle');
+      if(this.shapeName==='cercle'){
+        const [cox,coy]=this.centroid(orig);
+        const [cix,ciy]=this.centroid(interp);
+        this.drawDot(cox,coy,'#4f8ef7',7,'C');
+        this.drawDot(cix,ciy,'#f74f8e',7,"C'");
+      }
+      {const [rcx,rcy]=this.centroid(orig);this.drawRotHandle(rcx,rcy,70);}
+      {if(this.shapeName!=='cercle'){const labs=this.ptLabels();    orig.forEach(([x,y],i)=>this.drawDot(x,y,'#4f8ef7',6,labs[i]));}}
+      {if(this.shapeName!=='cercle'){const labs=this.ptLabelsImg(); interp.forEach(([x,y],i)=>this.drawDot(x,y,'#f74f8e',6,labs[i]));}}
+    }
+  }
+  _drawImgPlaceholder(px,py,s){
+    const {ctx}=this,[spx,spy]=this.w2s(px,py);
+    ctx.save();ctx.strokeStyle='#4f8ef7';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(spx,spy,s,s);ctx.setLineDash([]);
+    ctx.fillStyle='rgba(79,142,247,.1)';ctx.fillRect(spx,spy,s,s);
+    ctx.font="13px 'Syne',sans-serif";ctx.fillStyle='#4f8ef7';ctx.textAlign='center';
+    ctx.fillText('📂 Image',spx+s/2,spy+s/2);ctx.textAlign='start';ctx.restore();
+  }
+}
+
+// ══════════════════════════════════════════
+//  SYMÉTRIE CENTRALE
+// ══════════════════════════════════════════
+//  SYMÉTRIE CENTRALE
+// ══════════════════════════════════════════
+class Centrale extends Geo {
+  constructor(){
+    super('c-centrale','ce-coord','ce');
+    this.ocx=0;this.ocy=0;this.offset=[-130,60];
+    this.ptM=[-120,60];this.ptA=[-160,80];this.ptB=[-20,-60];this.imgPos=[-60,-60];
+    this.bindToggle('ce-tg-grid','showGrid',true);
+    this.bindToggle('ce-tg-center','showCenter',true);
+    this.bindToggle('ce-tg-lines','showLines',true);
+    this._initCenterSliders('ce-cx','ce-cx-v','ce-cy','ce-cy-v','ocx','ocy');
+    document.getElementById('ce-anim').addEventListener('click',e=>this.startAnim(e.currentTarget));
+    this._updateHint();
+  }
+  _initCenterSliders(idX,vIdX,idY,vIdY,propX,propY){
+    const elX=document.getElementById(idX),vX=document.getElementById(vIdX);
+    const elY=document.getElementById(idY),vY=document.getElementById(vIdY);
+    if(elX){if(vX)vX.textContent=elX.value;elX.addEventListener('input',()=>{this[propX]=+elX.value;if(vX)vX.textContent=elX.value;this.draw();});}
+    if(elY){if(vY)vY.textContent=elY.value;elY.addEventListener('input',()=>{this[propY]=+elY.value;if(vY)vY.textContent=elY.value;this.draw();});}
+    this._sliderIds={idX,vIdX,idY,vIdY,propX,propY};
+  }
+  _updateCenterSlidersOCX(){
+    const {idX,vIdX,idY,vIdY,propX,propY}=this._sliderIds;
+    const elX=document.getElementById(idX),vX=document.getElementById(vIdX);
+    const elY=document.getElementById(idY),vY=document.getElementById(vIdY);
+    const cx=Math.max(-250,Math.min(250,Math.round(this[propX])));
+    const cy=Math.max(-200,Math.min(200,Math.round(this[propY])));
+    if(elX){elX.value=cx;if(vX)vX.textContent=cx;}
+    if(elY){elY.value=cy;if(vY)vY.textContent=cy;}
+  }
+  _dn([sx,sy]){
+    if(this.showCenter){
+      const [wx,wy]=this.s2w(sx,sy),HIT=18/(this._zoom||1);
+      if(Math.hypot(wx-this.ocx,wy-this.ocy)<HIT){this._drag=true;this._dragTgt='center';this._doff=[wx-this.ocx,wy-this.ocy];return;}
+    }
+    super._dn([sx,sy]);
+  }
+  _mv([sx,sy]){
+    if(this._drag&&this._dragTgt==='center'){
+      const [wx,wy]=this.s2w(sx,sy);
+      this.ocx=wx-this._doff[0];this.ocy=wy-this._doff[1];
+      this._updateCenterSlidersOCX();
+      if(this.coordEl) this.coordEl.textContent=`O(${Math.round(this.ocx)},${Math.round(this.ocy)})`;
+      this.draw();return;
+    }
+    super._mv([sx,sy]);
+  }
+  _tr(x,y){return [2*this.ocx-x,2*this.ocy-y];}
+  _drawLinks(pts,imgPts){
+    if(!this.showLines&&!this.anim)return;
+    const lk=cssVar('--c-centrale-link');
+    pts.forEach(([x,y],i)=>{
+      const [ix,iy]=imgPts[i];
+      this.ctx.save();this.ctx.strokeStyle=lk;this.ctx.lineWidth=2.5;this.ctx.setLineDash([8,5]);
+      this.ctx.shadowColor=lk;this.ctx.shadowBlur=8;
+      const [s1x,s1y]=this.w2s(x,y),[s2x,s2y]=this.w2s(ix,iy);
+      this.ctx.beginPath();this.ctx.moveTo(s1x,s1y);this.ctx.lineTo(s2x,s2y);this.ctx.stroke();
+      this.ctx.setLineDash([]);this.ctx.restore();
+    });
+  }
+  draw(){
+    const {ctx,W,H}=this;if(!W)return;
+    this.clearBg();if(this.showGrid)this.drawGrid();
+    const O=[this.ocx,this.ocy],t=this.anim?this.animT:1;
+    if(this.shapeName==='point'){
+      const [ix,iy]=this._tr(this.ptM[0],this.ptM[1]);
+      const [iix,iiy]=[lerp(this.ptM[0],ix,t),lerp(this.ptM[1],iy,t)];
+      this._drawLinks([this.ptM],[[ix,iy]]);
+      // Codage milieu segment [M,M'] — rang 1 (seul segment)
+      if(this.showLines||this.anim){
+        const len=Math.hypot(ix-this.ptM[0],iy-this.ptM[1]);
+        if(len>2) this._codeMilieu(this.ptM[0],this.ptM[1],ix,iy,1,this.ocx,this.ocy);
+      }
+      this.drawDot(this.ptM[0],this.ptM[1],'#4f8ef7',8,'M');this.drawDot(iix,iiy,'#f74f8e',8,"M'");
+    }
+    else if(this.shapeName==='droite'){
+      const [iax,iay]=this._tr(this.ptA[0],this.ptA[1]);
+      const [ibx,iby]=this._tr(this.ptB[0],this.ptB[1]);
+      const [iiax,iiay]=[lerp(this.ptA[0],iax,t),lerp(this.ptA[1],iay,t)];
+      const [iibx,iiby]=[lerp(this.ptB[0],ibx,t),lerp(this.ptB[1],iby,t)];
+      this._drawLinks([this.ptA,this.ptB],[[iax,iay],[ibx,iby]]);
+      // Codage milieu avec rangs
+      if(this.showLines||this.anim){
+        const segs=[[this.ptA[0],this.ptA[1],iax,iay],[this.ptB[0],this.ptB[1],ibx,iby]];
+        const lengths=segs.map(([x,y,ix2,iy2])=>Math.hypot(ix2-x,iy2-y));
+        const ranks=this._computeRanks(lengths);
+        segs.forEach(([x,y,ix2,iy2],si)=>{ if(lengths[si]>2) this._codeMilieu(x,y,ix2,iy2,ranks[si],this.ocx,this.ocy); });
+      }
+      this.drawDroiteOrig(this.ptA[0],this.ptA[1],this.ptB[0],this.ptB[1]);
+      this.drawDroiteImg(iiax,iiay,iibx,iiby);
+    }
+    else if(this.shapeName==='image'){
+      const s=this.imgSize,[px,py]=this.imgPos,cx=px+s/2,cy=py-s/2;
+      const [icx,icy]=this._tr(cx,cy);
+      this._drawLinks([[cx,cy]],[[icx,icy]]);
+      if(this.imgObj){
+        const [spx,spy]=this.w2s(px,py);
+        ctx.save();ctx.globalAlpha=1;ctx.drawImage(this.imgObj,spx,spy,s,s);ctx.strokeStyle='#4f8ef7';ctx.lineWidth=2.5;ctx.strokeRect(spx,spy,s,s);ctx.restore();
+        const [isx,isy]=this.w2s(icx,icy);
+        ctx.save();ctx.globalAlpha=0.55;ctx.translate(isx,isy);ctx.rotate(Math.PI);ctx.drawImage(this.imgObj,-s/2,-s/2,s,s);ctx.restore();
+      } else {this._drawImgPlaceholder(px,py,s,'#4f8ef7');}
+    }
+    else {
+      const orig=this.pts();
+      const img2=orig.map(([x,y])=>this._tr(x,y));
+      const interp=orig.map(([x,y],i)=>[lerp(x,img2[i][0],t),lerp(y,img2[i][1],t)]);
+      // Pour cercle : liaisons et codage milieu uniquement depuis le centre
+      if(this.shapeName==='cercle'){
+        const co=this.centroid(orig),ci=this.centroid(img2);
+        this._drawLinks([co],[ci]);
+        if(this.showLines||this.anim){
+          const len=Math.hypot(ci[0]-co[0],ci[1]-co[1]);
+          if(len>2) this._codeMilieu(co[0],co[1],ci[0],ci[1],1,this.ocx,this.ocy);
+        }
+      } else {
+        this._drawLinks(orig,img2);
+        // Codage milieu avec rangs sur tous les segments de construction
+        if(this.showLines||this.anim){
+          const lengths=orig.map(([x,y],i)=>Math.hypot(img2[i][0]-x,img2[i][1]-y));
+          const ranks=this._computeRanks(lengths);
+          orig.forEach(([x,y],i)=>{ if(lengths[i]>2) this._codeMilieu(x,y,img2[i][0],img2[i][1],ranks[i],this.ocx,this.ocy); });
+        }
+      }
+      this.drawPoly(orig,'rgba(79,142,247,.18)','#4f8ef7',3,this.shapeName==='cercle');
+      this.drawPoly(interp,'rgba(247,79,142,.18)','#f74f8e',3,this.shapeName==='cercle');
+      // Centre nommé C et C' pour le cercle
+      if(this.shapeName==='cercle'){
+        const [cox,coy]=this.centroid(orig);
+        const [cix,ciy]=this.centroid(interp);
+        this.drawDot(cox,coy,'#4f8ef7',7,'C');
+        this.drawDot(cix,ciy,'#f74f8e',7,"C'");
+      }
+      {const [rcx,rcy]=this.centroid(orig);this.drawRotHandle(rcx,rcy,70);}
+      {if(this.shapeName!=='cercle'){const labs=this.ptLabels();    orig.forEach(([x,y],i)=>this.drawDot(x,y,'#4f8ef7',6,labs[i]));}}
+      {if(this.shapeName!=='cercle'){const labs=this.ptLabelsImg(); interp.forEach(([x,y],i)=>this.drawDot(x,y,'#f74f8e',6,labs[i]));}}
+    }
+    if(this.showCenter){
+      const [sox,soy]=this.w2s(this.ocx,this.ocy);
+      ctx.save();ctx.strokeStyle='#f7c94f';ctx.lineWidth=2;ctx.globalAlpha=0.5;ctx.shadowColor='#f7c94f';ctx.shadowBlur=8;
+      ctx.beginPath();ctx.arc(sox,soy,14,0,Math.PI*2);ctx.stroke();ctx.restore();
+      this.drawDot(O[0],O[1],'#f7c94f',9,'O');
+    }
+  }
+  _drawImgPlaceholder(px,py,s,col){
+    const {ctx}=this,[spx,spy]=this.w2s(px,py);
+    ctx.save();ctx.strokeStyle=col;ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(spx,spy,s,s);ctx.setLineDash([]);
+    ctx.fillStyle='rgba(79,142,247,.1)';ctx.fillRect(spx,spy,s,s);
+    ctx.font="13px 'Syne',sans-serif";ctx.fillStyle=col;ctx.textAlign='center';ctx.fillText('📂 Image',spx+s/2,spy+s/2);ctx.textAlign='start';ctx.restore();
+  }
+}
+
+// ══════════════════════════════════════════
+//  TRANSLATION
+// ══════════════════════════════════════════
+class Translation extends Geo {
+  constructor(){
+    super('c-translation','tr-coord','tr');
+    this.vx=150; this.vy=80; this.offset=[-140,0];
+    this.ptM=[-120,60]; this.ptA=[-160,80]; this.ptB=[-20,-60]; this.imgPos=[-60,-60];
+    // Vecteur MN : position de M (origine), N = M + (vx,vy)
+    // Initialisé au premier _resize
+    this.vecPos = null;   // coords monde de M
+    this.bindToggle('tr-tg-grid','showGrid',true);
+    this.bindToggle('tr-tg-vec','showVec',true);
+    this.bindToggle('tr-tg-trail','showTrail',true);
+    document.getElementById('tr-anim').addEventListener('click',e=>this.startAnim(e.currentTarget));
+    // Synchroniser les sliders avec vx/vy (lecture seule, mise à jour via drag de N)
+    this._syncSliders();
+    this._updateHint();
+  }
+
+  _syncSliders(){
+    const elX=document.getElementById('tr-vx'), vX=document.getElementById('tr-vx-v');
+    const elY=document.getElementById('tr-vy'), vY=document.getElementById('tr-vy-v');
+    if(elX){ elX.addEventListener('input',()=>{ this.vx=+elX.value; if(vX) vX.textContent=elX.value; this.draw(); }); if(vX) vX.textContent=elX.value; }
+    if(elY){ elY.addEventListener('input',()=>{ this.vy=+elY.value; if(vY) vY.textContent=elY.value; this.draw(); }); if(vY) vY.textContent=elY.value; }
+  }
+
+  _updateSliderDisplay(){
+    const elX=document.getElementById('tr-vx'), vX=document.getElementById('tr-vx-v');
+    const elY=document.getElementById('tr-vy'), vY=document.getElementById('tr-vy-v');
+    const clamp=(v,min,max)=>Math.max(min,Math.min(max,Math.round(v)));
+    const cx=clamp(this.vx,-300,300), cy=clamp(this.vy,-250,250);
+    if(elX){ elX.value=cx; if(vX) vX.textContent=cx; }
+    if(elY){ elY.value=cy; if(vY) vY.textContent=cy; }
+  }
+
+  _resize(){
+    super._resize();
+    if(!this.vecPos) this.vecPos=[100,160];
+  }
+
+  _tr(x,y,t){ return [x+this.vx*t, y+this.vy*t]; }
+
+  // Surcharge _dn : M = déplacer vecteur entier, N = étirer/réduire/inverser
+  _dn([sx,sy]){
+    if(this.showVec && this.vecPos){
+      const [wx,wy]=this.s2w(sx,sy);
+      const HIT=20/(this._zoom||1);
+      const [mx,my]=this.vecPos;
+      const nx=mx+this.vx, ny=my+this.vy;
+      // Clic sur N → étirer/réduire/changer sens
+      if(Math.hypot(wx-nx,wy-ny)<HIT){
+        this._drag=true; this._dragTgt='vecN';
+        return;
+      }
+      // Clic sur M → déplacer tout le vecteur
+      if(Math.hypot(wx-mx,wy-my)<HIT){
+        this._drag=true; this._dragTgt='vecM';
+        this._doff=[wx-mx, wy-my];
+        return;
+      }
+    }
+    super._dn([sx,sy]);
+  }
+
+  _mv([sx,sy]){
+    if(!this._drag) { super._mv([sx,sy]); return; }
+    const [wx,wy]=this.s2w(sx,sy);
+    if(this._dragTgt==='vecM'){
+      // Déplacer M (et donc tout le vecteur, vx/vy inchangés)
+      this.vecPos=[wx-this._doff[0], wy-this._doff[1]];
+      if(this.coordEl) this.coordEl.textContent=`M(${Math.round(this.vecPos[0])}, ${Math.round(this.vecPos[1])})`;
+      this.draw(); return;
+    }
+    if(this._dragTgt==='vecN'){
+      // Déplacer N → recalcule vx/vy = N - M
+      const [mx,my]=this.vecPos;
+      this.vx=Math.round(wx-mx);
+      this.vy=Math.round(wy-my);
+      this._updateSliderDisplay();
+      if(this.coordEl) this.coordEl.textContent=`N(${Math.round(wx)}, ${Math.round(wy)})`;
+      this.draw(); return;
+    }
+    super._mv([sx,sy]);
+  }
+
+  _updateCursor([sx,sy]){
+    if(this._drag) return;
+    const [wx,wy]=this.s2w(sx,sy);
+    const HIT=20/(this._zoom||1);
+    if(this.showVec && this.vecPos){
+      const [mx,my]=this.vecPos;
+      const nx=mx+this.vx, ny=my+this.vy;
+      if(Math.hypot(wx-nx,wy-ny)<HIT){ this.cv.style.cursor='crosshair'; return; }
+      if(Math.hypot(wx-mx,wy-my)<HIT){ this.cv.style.cursor='grab'; return; }
+    }
+    if(!['triangle','maison','fleche','lettre'].includes(this.shapeName)){
+      this.cv.style.cursor='crosshair'; return;
+    }
+    const [cx,cy]=this.centroid(this.pts());
+    const dist=Math.hypot(wx-cx,wy-cy);
+    this.cv.style.cursor = dist<50?'grab':'crosshair';
+  }
+
+  draw(){
+    const {ctx,W,H}=this; if(!W) return;
+    this.clearBg(); if(this.showGrid) this.drawGrid();
+    const t=this.anim?this.animT:1;
+    const trailCol=cssVar('--c-translation-trail');
+
+    const drawTrail=(x,y)=>{
+      if(!this.showTrail&&!this.anim) return;
+      ctx.save();ctx.strokeStyle=trailCol;ctx.lineWidth=2.5;ctx.setLineDash([6,4]);
+      ctx.shadowColor=trailCol;ctx.shadowBlur=8;
+      const[s1x,s1y]=this.w2s(x,y),[s2x,s2y]=this.w2s(x+this.vx,y+this.vy);
+      ctx.beginPath();ctx.moveTo(s1x,s1y);ctx.lineTo(s2x,s2y);ctx.stroke();
+      ctx.setLineDash([]);ctx.restore();
+    };
+
+    if(this.shapeName==='point'){
+      const[ix,iy]=this._tr(this.ptM[0],this.ptM[1],t);
+      drawTrail(this.ptM[0],this.ptM[1]);
+      this.drawDot(this.ptM[0],this.ptM[1],'#4f8ef7',8,'M');
+      this.drawDot(ix,iy,'#f74f8e',8,"M'");
+    }
+    else if(this.shapeName==='droite'){
+      const[iax,iay]=this._tr(this.ptA[0],this.ptA[1],t);
+      const[ibx,iby]=this._tr(this.ptB[0],this.ptB[1],t);
+      drawTrail(this.ptA[0],this.ptA[1]); drawTrail(this.ptB[0],this.ptB[1]);
+      this.drawDroiteOrig(this.ptA[0],this.ptA[1],this.ptB[0],this.ptB[1]);
+      this.drawDroiteImg(iax,iay,ibx,iby);
+    }
+    else if(this.shapeName==='image'){
+      const s=this.imgSize,[px,py]=this.imgPos;
+      const[ipx,ipy]=this._tr(px,py,t);
+      drawTrail(px+s/2,py-s/2);
+      if(this.imgObj){
+        const[spx,spy]=this.w2s(px,py);
+        ctx.save();ctx.drawImage(this.imgObj,spx,spy,s,s);
+        ctx.strokeStyle='#4f8ef7';ctx.lineWidth=2.5;ctx.strokeRect(spx,spy,s,s);ctx.restore();
+        const[isx,isy]=this.w2s(ipx,ipy);
+        ctx.save();ctx.globalAlpha=0.55;ctx.drawImage(this.imgObj,isx,isy,s,s);
+        ctx.globalAlpha=1;ctx.strokeStyle='#f74f8e';ctx.lineWidth=2.5;ctx.strokeRect(isx,isy,s,s);ctx.restore();
+      } else { this._drawImgPlaceholder(px,py,s); }
+    }
+    else {
+      const orig=this.pts();
+      const img2=orig.map(([x,y])=>this._tr(x,y,t));
+      if(this.showTrail||this.anim){
+        if(this.shapeName==='cercle'){ const [ccx,ccy]=this.centroid(orig);drawTrail(ccx,ccy); }
+        else orig.forEach(([x,y])=>drawTrail(x,y));
+      }
+      this.drawPoly(orig,'rgba(79,142,247,.18)','#4f8ef7',3,this.shapeName==='cercle');
+      this.drawPoly(img2,'rgba(247,79,142,.18)','#f74f8e',3,this.shapeName==='cercle');
+      if(this.shapeName==='cercle'){
+        const [cox,coy]=this.centroid(orig);
+        const [cix,ciy]=this.centroid(img2);
+        this.drawDot(cox,coy,'#4f8ef7',7,'C');
+        this.drawDot(cix,ciy,'#f74f8e',7,"C'");
+      }
+      {const[rcx,rcy]=this.centroid(orig); this.drawRotHandle(rcx,rcy,70);}
+      {if(this.shapeName!=='cercle'){const labs=this.ptLabels();    orig.forEach(([x,y],i)=>this.drawDot(x,y,'#4f8ef7',6,labs[i]));}}
+      {if(this.shapeName!=='cercle'){const labs=this.ptLabelsImg(); img2.forEach(([x,y],i)=>this.drawDot(x,y,'#f74f8e',6,labs[i]));}}
+    }
+
+    // ── Vecteur MN interactif ──────────────────────────────────
+    if(this.showVec && this.vecPos){
+      const [mx,my]=this.vecPos;
+      const nx=mx+this.vx, ny=my+this.vy;
+      // Flèche principale
+      this.drawArrow(mx,my,nx,ny,'#f7c94f',3.5);
+      // Point M : grab pour déplacer tout le vecteur
+      this.drawDot(mx,my,'#f7c94f',7,'M');
+      // Point N : drag pour étirer/réduire/inverser
+      // Anneau distinctif sur N pour indiquer l'interaction d'étirement
+      const [snx,sny]=this.w2s(nx,ny);
+      ctx.save();
+      ctx.strokeStyle='#f7c94f'; ctx.lineWidth=2.5;
+      ctx.shadowColor='#f7c94f'; ctx.shadowBlur=8;
+      ctx.beginPath(); ctx.arc(snx,sny,9,0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+      this.drawDot(nx,ny,'#f7c94f',5,'N');
+    }
+  }
+
+  _drawImgPlaceholder(px,py,s){
+    const {ctx}=this,[spx,spy]=this.w2s(px,py);
+    ctx.save();ctx.strokeStyle='#4f8ef7';ctx.lineWidth=2;ctx.setLineDash([6,4]);
+    ctx.strokeRect(spx,spy,s,s);ctx.setLineDash([]);
+    ctx.fillStyle='rgba(79,142,247,.1)';ctx.fillRect(spx,spy,s,s);
+    ctx.font="13px 'Syne',sans-serif";ctx.fillStyle='#4f8ef7';ctx.textAlign='center';
+    ctx.fillText('📂 Image',spx+s/2,spy+s/2);ctx.textAlign='start';ctx.restore();
+  }
+}
+
+// ══════════════════════════════════════════
+//  ROTATION
+// ══════════════════════════════════════════
+//  ROTATION
+// ══════════════════════════════════════════
+class Rotation extends Geo {
+  constructor(){
+    super('c-rotation','ro-coord','ro');
+    this.roAng=90;this.rcx=0;this.rcy=0;this.offset=[90,30];
+    this.ptM=[-120,60];this.ptA=[-160,80];this.ptB=[-20,-60];this.imgPos=[-60,-60];
+    this.bindSlider('ro-ang','roAng','ro-ang-v','°');
+    this.bindToggle('ro-tg-grid','showGrid',true);
+    this.bindToggle('ro-tg-center','showCenter',true);
+    this.bindToggle('ro-tg-arc','showArc',true);
+    this._initCenterSlidersRot();
+    document.getElementById('ro-anim').addEventListener('click',e=>this.startAnim(e.currentTarget));
+    this._updateHint();
+  }
+  _initCenterSlidersRot(){
+    const elX=document.getElementById('ro-cx'),vX=document.getElementById('ro-cx-v');
+    const elY=document.getElementById('ro-cy'),vY=document.getElementById('ro-cy-v');
+    if(elX){if(vX)vX.textContent=elX.value;elX.addEventListener('input',()=>{this.rcx=+elX.value;if(vX)vX.textContent=elX.value;this.draw();});}
+    if(elY){if(vY)vY.textContent=elY.value;elY.addEventListener('input',()=>{this.rcy=+elY.value;if(vY)vY.textContent=elY.value;this.draw();});}
+  }
+  _updateCenterSlidersRot(){
+    const elX=document.getElementById('ro-cx'),vX=document.getElementById('ro-cx-v');
+    const elY=document.getElementById('ro-cy'),vY=document.getElementById('ro-cy-v');
+    const cx=Math.max(-250,Math.min(250,Math.round(this.rcx)));
+    const cy=Math.max(-200,Math.min(200,Math.round(this.rcy)));
+    if(elX){elX.value=cx;if(vX)vX.textContent=cx;}
+    if(elY){elY.value=cy;if(vY)vY.textContent=cy;}
+  }
+  _dn([sx,sy]){
+    if(this.showCenter){
+      const [wx,wy]=this.s2w(sx,sy),HIT=18/(this._zoom||1);
+      if(Math.hypot(wx-this.rcx,wy-this.rcy)<HIT){this._drag=true;this._dragTgt='rotcenter';this._doff=[wx-this.rcx,wy-this.rcy];return;}
+    }
+    super._dn([sx,sy]);
+  }
+  _mv([sx,sy]){
+    if(this._drag&&this._dragTgt==='rotcenter'){
+      const [wx,wy]=this.s2w(sx,sy);
+      this.rcx=wx-this._doff[0];this.rcy=wy-this._doff[1];
+      this._updateCenterSlidersRot();
+      if(this.coordEl) this.coordEl.textContent=`O(${Math.round(this.rcx)},${Math.round(this.rcy)})`;
+      this.draw();return;
+    }
+    super._mv([sx,sy]);
+  }
+  _tr(x,y,t){return rotPt(x,y,this.rcx,this.rcy,this.roAng*t);}
+  _drawArc(x,y,t){
+    if(!this.showArc&&!this.anim)return;
+    const {ctx}=this,r=Math.hypot(x-this.rcx,y-this.rcy);if(r<5)return;
+    const sa=Math.atan2(-(y-this.rcy),x-this.rcx);
+    const angRad=this.roAng*t*Math.PI/180;
+    const ea=sa-angRad;
+    const [sox,soy]=this.w2s(this.rcx,this.rcy);
+    const arcCol=cssVar('--c-rotation-arc');
+    ctx.save();ctx.strokeStyle=arcCol;ctx.lineWidth=2.5;ctx.shadowColor=arcCol;ctx.shadowBlur=8;
+    ctx.beginPath();ctx.arc(sox,soy,r,sa,ea,this.roAng*t>0);ctx.stroke();
+    // Flèche au bout de l'arc
+    const fx=sox+r*Math.cos(ea),fy=soy+r*Math.sin(ea);
+    const fang=ea+(this.roAng*t>0?-Math.PI/2:Math.PI/2);
+    ctx.fillStyle=arcCol;
+    ctx.beginPath();ctx.moveTo(fx,fy);
+    ctx.lineTo(fx-10*Math.cos(fang-0.4),fy-10*Math.sin(fang-0.4));
+    ctx.lineTo(fx-10*Math.cos(fang+0.4),fy-10*Math.sin(fang+0.4));
+    ctx.closePath();ctx.fill();
+    // Mesure de l'angle : une seule fois par frame, près du centre O
+    if(!this._angleLabeled){
+      this._angleLabeled=true;
+      const angDeg=Math.round(Math.abs(this.roAng*t));
+      // Position : légèrement décalé depuis O dans la direction bisectrice de l'arc
+      const bisA=(sa+ea)/2;
+      const labelDist=Math.min(r*0.45,40/(this._zoom||1)); // entre O et le arc
+      const lx=sox+labelDist*Math.cos(bisA),ly=soy+labelDist*Math.sin(bisA);
+      const fontSize=Math.max(13,Math.min(18,14*(this._zoom||1)));
+      ctx.font=`bold ${fontSize}px 'Space Mono',monospace`;
+      ctx.fillStyle=arcCol;ctx.shadowBlur=6;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      // Fond semi-transparent pour lisibilité
+      const metrics=ctx.measureText(angDeg+'°');
+      const tw=metrics.width,th=fontSize;
+      ctx.fillStyle='rgba(0,0,0,0.45)';
+      ctx.fillRect(lx-tw/2-3,ly-th/2-2,tw+6,th+4);
+      ctx.fillStyle=arcCol;
+      ctx.fillText(angDeg+'°',lx,ly);
+      ctx.textAlign='start';ctx.textBaseline='alphabetic';
+    }
+    ctx.restore();
+  }
+  _drawRadii(x,y,ix,iy){
+    if(!this.showCenter)return;
+    const radCol=cssVar('--c-rotation-radius'),{ctx}=this;
+    const [sox,soy]=this.w2s(this.rcx,this.rcy);
+    const [spx,spy]=this.w2s(x,y),[six,siy]=this.w2s(ix,iy);
+    ctx.save();ctx.strokeStyle=radCol;ctx.lineWidth=2.5;ctx.setLineDash([6,4]);ctx.shadowColor=radCol;ctx.shadowBlur=8;
+    ctx.beginPath();ctx.moveTo(sox,soy);ctx.lineTo(spx,spy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(sox,soy);ctx.lineTo(six,siy);ctx.stroke();
+    ctx.setLineDash([]);ctx.restore();
+  }
+  draw(){
+    const {ctx,W,H}=this;if(!W)return;
+    this.clearBg();if(this.showGrid)this.drawGrid();
+    this._angleLabeled=false; // reset flag pour n'afficher l'angle qu'une fois
+    const O=[this.rcx,this.rcy],t=this.anim?this.animT:1;
+    if(this.shapeName==='point'){
+      const [ix,iy]=this._tr(this.ptM[0],this.ptM[1],t);
+      this._drawArc(this.ptM[0],this.ptM[1],t);this._drawRadii(this.ptM[0],this.ptM[1],ix,iy);
+      this.drawDot(this.ptM[0],this.ptM[1],'#4f8ef7',8,'M');this.drawDot(ix,iy,'#f74f8e',8,"M'");
+    }
+    else if(this.shapeName==='droite'){
+      const [iax,iay]=this._tr(this.ptA[0],this.ptA[1],t);
+      const [ibx,iby]=this._tr(this.ptB[0],this.ptB[1],t);
+      this._drawArc(this.ptA[0],this.ptA[1],t);this._drawArc(this.ptB[0],this.ptB[1],t);
+      this._drawRadii(this.ptA[0],this.ptA[1],iax,iay);this._drawRadii(this.ptB[0],this.ptB[1],ibx,iby);
+      this.drawDroiteOrig(this.ptA[0],this.ptA[1],this.ptB[0],this.ptB[1]);
+      this.drawDroiteImg(iax,iay,ibx,iby);
+    }
+    else if(this.shapeName==='image'){
+      const s=this.imgSize,[px,py]=this.imgPos,cx=px+s/2,cy=py-s/2;
+      const [icx,icy]=this._tr(cx,cy,t);
+      this._drawArc(cx,cy,t);this._drawRadii(cx,cy,icx,icy);
+      if(this.imgObj){
+        const [spx,spy]=this.w2s(px,py);
+        ctx.save();ctx.drawImage(this.imgObj,spx,spy,s,s);ctx.strokeStyle='#4f8ef7';ctx.lineWidth=2.5;ctx.strokeRect(spx,spy,s,s);ctx.restore();
+        const [isx,isy]=this.w2s(icx,icy);
+        ctx.save();ctx.globalAlpha=0.55;ctx.translate(isx,isy);ctx.rotate(this.roAng*t*Math.PI/180);ctx.drawImage(this.imgObj,-s/2,-s/2,s,s);ctx.restore();
+      } else {this._drawImgPlaceholder(px,py,s);}
+    }
+    else {
+      const orig=this.pts();
+      const img2=orig.map(([x,y])=>this._tr(x,y,t));
+      if(this.showArc||this.anim){
+        if(this.shapeName==='cercle'){ const [ccx,ccy]=this.centroid(orig);this._drawArc(ccx,ccy,t); }
+        else orig.forEach(([x,y])=>this._drawArc(x,y,t));
+      }
+      this.drawPoly(orig,'rgba(79,142,247,.18)','#4f8ef7',3,this.shapeName==='cercle');
+      this.drawPoly(img2,'rgba(247,79,142,.18)','#f74f8e',3,this.shapeName==='cercle');
+      // Centre nommé C et C' pour le cercle
+      if(this.shapeName==='cercle'){
+        const [cox,coy]=this.centroid(orig);
+        const [cix,ciy]=this.centroid(img2);
+        this.drawDot(cox,coy,'#4f8ef7',7,'C');
+        this.drawDot(cix,ciy,'#f74f8e',7,"C'");
+      }
+      {const [rcx2,rcy2]=this.centroid(orig);this.drawRotHandle(rcx2,rcy2,70);}
+      {if(this.shapeName!=='cercle'){const labs=this.ptLabels();    orig.forEach(([x,y],i)=>this.drawDot(x,y,'#4f8ef7',6,labs[i]));}}
+      {if(this.shapeName!=='cercle'){const labs=this.ptLabelsImg(); img2.forEach(([x,y],i)=>this.drawDot(x,y,'#f74f8e',6,labs[i]));}}
+      if(this.showCenter){
+        if(this.shapeName==='cercle'){ const [ccx,ccy]=this.centroid(orig),[cix2,ciy2]=this.centroid(img2);this._drawRadii(ccx,ccy,cix2,ciy2); }
+        else orig.forEach(([px,py],i)=>this._drawRadii(px,py,img2[i][0],img2[i][1]));
+      }
+    }
+    if(this.showCenter){
+      const [sox,soy]=this.w2s(this.rcx,this.rcy);
+      ctx.save();ctx.strokeStyle='#f7c94f';ctx.lineWidth=2;ctx.globalAlpha=0.5;ctx.shadowColor='#f7c94f';ctx.shadowBlur=8;
+      ctx.beginPath();ctx.arc(sox,soy,14,0,Math.PI*2);ctx.stroke();ctx.restore();
+      this.drawDot(O[0],O[1],'#f7c94f',9,'O');
+    }
+  }
+  _drawImgPlaceholder(px,py,s){
+    const {ctx}=this,[spx,spy]=this.w2s(px,py);
+    ctx.save();ctx.strokeStyle='#4f8ef7';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(spx,spy,s,s);ctx.setLineDash([]);
+    ctx.fillStyle='rgba(79,142,247,.1)';ctx.fillRect(spx,spy,s,s);
+    ctx.font="13px 'Syne',sans-serif";ctx.fillStyle='#4f8ef7';ctx.textAlign='center';ctx.fillText('📂 Image',spx+s/2,spy+s/2);ctx.textAlign='start';ctx.restore();
+  }
+}
+
+// ══════════════════════════════════════════
+//  ONGLETS
+// ══════════════════════════════════════════
+// Propriétés de l'objet à copier d'un onglet à l'autre
+const SYNC_PROPS = ['shapeName','shapeSides','shapeAngle','offset','ptM','ptA','ptB','imgPos','imgObj','imgSize'];
+
+function syncShapeToAll(src){
+  const targets = Object.values(instances).filter(i=>i && i!==src);
+  targets.forEach(tgt=>{
+    SYNC_PROPS.forEach(p=>{ tgt[p] = src[p]; });
+    // Mettre à jour le <select> de l'onglet cible
+    const sel = document.getElementById(tgt.prefix+'-shape');
+    if(sel) sel.value = src.shapeName;
+    // Mettre à jour le slider côtés
+    const sidesEl  = document.getElementById(tgt.prefix+'-sides');
+    const sidesVal = document.getElementById(tgt.prefix+'-sides-v');
+    if(sidesEl){ sidesEl.value = src.shapeSides; if(sidesVal) sidesVal.textContent = src.shapeSides; }
+    // Afficher/masquer les zones image et côtés
+    const sidesZone = document.getElementById(tgt.prefix+'-sides-zone');
+    if(sidesZone) sidesZone.classList.toggle('visible', src.shapeName==='polygone');
+    tgt.imgCtrl.show(src.shapeName==='image');
+    // Synchroniser l'aperçu image si besoin
+    if(src.shapeName==='image' && src.imgObj){
+      const prev = document.getElementById(tgt.prefix+'-img-preview');
+      if(prev){ prev.src = document.getElementById(src.prefix+'-img-preview').src; prev.classList.add('visible'); }
+    }
+  });
+}
+
+let _currentTab = 'axiale';
+
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const tab=btn.dataset.tab;
+    // Synchroniser la forme depuis l'onglet actif vers tous les autres
+    if(instances[_currentTab]) syncShapeToAll(instances[_currentTab]);
+    _currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('pane-'+tab).classList.add('active');
+    // Redessiner l'onglet cible avec la nouvelle forme
+    // Forcer un resize car le canvas était caché (W=0) et n'a pas été dimensionné
+    if(instances[tab]){ instances[tab]._resize(); instances[tab]._updateHint(); instances[tab].draw(); }
+  });
+});
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+const instances={};
+function init(){
+  instances.axiale      = new Axiale();
+  instances.centrale    = new Centrale();
+  instances.translation = new Translation();
+  instances.rotation    = new Rotation();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
+else init();
+
+
+// ════ ZOOM & PAN ════════════════════════════════════════════════
+// Injecte _zoom/_panX/_panY dans chaque instance Geo
+// s2w/w2s les lit automatiquement
+(function(){
+  const MAP = {ax:'axiale', ce:'centrale', tr:'translation', ro:'rotation'};
+
+  function setup(pf){
+    const name = MAP[pf];
+    const cv   = document.getElementById('c-'+name);
+    if(!cv) return;
+
+    let zoom=1, panX=0, panY=0;
+    let panning=false, panStart=[0,0];
+    let pinchDist=0;
+
+    // Retourner l'instance Geo correspondante
+    function inst(){ return instances[name]; }
+
+    function apply(){
+      const g=inst(); if(!g) return;
+      g._zoom=zoom; g._panX=panX; g._panY=panY;
+      g.draw();
+    }
+
+    function updLabel(){
+      const el=document.getElementById(pf+'-zpct');
+      if(el) el.textContent=Math.round(zoom*100)+'%';
+    }
+
+    // Zoom centré sur point écran (sx,sy)
+    // Convention identique à s2w/w2s :
+    //   s2w: wx=(sx-OX-panX)/zoom  wy=(OY+panY-sy)/zoom
+    //   w2s: sx=OX+panX+wx*zoom    sy=OY+panY-wy*zoom
+    function zoomAt(factor,sx,sy){
+      const g=inst();
+      const OX=g?g.OX:cv.width/2;
+      const OY=g?g.OY:cv.height/2;
+      // Point monde sous le curseur AVANT zoom
+      const wx=(sx-OX-panX)/zoom;
+      const wy=(OY+panY-sy)/zoom;
+      zoom=Math.max(0.08,Math.min(14,zoom*factor));
+      // Après zoom : garder (wx,wy) sous (sx,sy)
+      // sx = OX + panX + wx*zoom  =>  panX = sx - OX - wx*zoom
+      // sy = OY + panY - wy*zoom  =>  panY = sy - OY + wy*zoom
+      panX=sx-OX-wx*zoom;
+      panY=sy-OY+wy*zoom;
+      apply(); updLabel();
+    }
+
+    // Boutons
+    document.getElementById(pf+'-zp').addEventListener('click',()=>zoomAt(1.25,cv.width/2,cv.height/2));
+    document.getElementById(pf+'-zm').addEventListener('click',()=>zoomAt(1/1.25,cv.width/2,cv.height/2));
+    document.getElementById(pf+'-zr').addEventListener('click',()=>{zoom=1;panX=0;panY=0;apply();updLabel();});
+
+    // Molette
+    cv.addEventListener('wheel',e=>{
+      e.preventDefault();
+      const r=cv.getBoundingClientRect();
+      zoomAt(e.deltaY<0?1.12:1/1.12, e.clientX-r.left, e.clientY-r.top);
+    },{passive:false});
+
+    // Pan : Ctrl+glisser
+    cv.addEventListener('mousedown',e=>{
+      if(e.ctrlKey||e.metaKey){
+        panning=true;
+        panStart=[e.clientX-panX, e.clientY-panY];
+        e.preventDefault();
+      }
+    });
+    window.addEventListener('mousemove',e=>{
+      if(!panning) return;
+      panX=e.clientX-panStart[0];
+      panY=e.clientY-panStart[1];
+      apply();
+    });
+    window.addEventListener('mouseup',()=>{ panning=false; });
+    window.addEventListener('blur',()=>{ panning=false; });
+
+    // Pinch tactile
+    cv.addEventListener('touchstart',e=>{
+      if(e.touches.length===2){
+        pinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,
+                             e.touches[0].clientY-e.touches[1].clientY);
+        e.preventDefault();
+      }
+    },{passive:false});
+    cv.addEventListener('touchmove',e=>{
+      if(e.touches.length===2&&pinchDist>0){
+        const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,
+                           e.touches[0].clientY-e.touches[1].clientY);
+        const r=cv.getBoundingClientRect();
+        const cx=(e.touches[0].clientX+e.touches[1].clientX)/2-r.left;
+        const cy=(e.touches[0].clientY+e.touches[1].clientY)/2-r.top;
+        zoomAt(d/pinchDist,cx,cy);
+        pinchDist=d;
+        e.preventDefault();
+      }
+    },{passive:false});
+    cv.addEventListener('touchend',()=>{pinchDist=0;});
+  }
+
+  // Attendre que les instances soient créées
+  ['ax','ce','tr','ro'].forEach(setup);
+})();
+
+// ══ ICÔNES SVG MATÉRIEL ══════════════════════════════════════════
+// Remplace les emojis ⭕ et 🧭 par de vrais SVG dessinés
+(function(){
+  // SVG Compas — deux branches en V avec pointe et mine
+  const SVG_COMPAS = `<svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="9" y1="2" x2="4" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="9" y1="2" x2="14" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="9" cy="2.5" r="1.2" fill="currentColor"/>
+    <line x1="5.5" y1="10" x2="12.5" y2="10" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+    <circle cx="4.2" cy="16" r="0.9" fill="currentColor" opacity="0.8"/>
+    <circle cx="13.8" cy="16" r="0.9" fill="currentColor" opacity="0.8"/>
+  </svg>`;
+
+  // SVG Rapporteur — option B : corps plein + trou central + ligne centrale pointillée
+  const SVG_RAPPORTEUR = `<svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M1 15 A8 8 0 0 1 17 15 Z" fill="currentColor" opacity="0.12"/>
+    <path d="M1 15 A8 8 0 0 1 17 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="1" y1="15" x2="17" y2="15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="9" y1="15" x2="9" y2="7" stroke="currentColor" stroke-width="0.8" stroke-linecap="round" opacity="0.35" stroke-dasharray="1.2 1.4"/>
+    <line x1="1" y1="15" x2="2.4" y2="11.2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+    <line x1="17" y1="15" x2="15.6" y2="11.2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+    <line x1="3.8" y1="9.5" x2="5.1" y2="8.2" stroke="currentColor" stroke-width="0.9" stroke-linecap="round" opacity="0.7"/>
+    <line x1="14.2" y1="9.5" x2="12.9" y2="8.2" stroke="currentColor" stroke-width="0.9" stroke-linecap="round" opacity="0.7"/>
+    <line x1="9" y1="7" x2="9" y2="8.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+    <circle cx="9" cy="15" r="1.5" fill="white" stroke="currentColor" stroke-width="1"/>
+  </svg>`;
+
+  // Injecter dans tous les spans .tool-icon dont le contenu est l'emoji cible
+  document.querySelectorAll('.tool-icon').forEach(el => {
+    const t = el.textContent.trim();
+    if(t === '⭕') { el.innerHTML = SVG_COMPAS; }
+    if(t === '🧭') { el.innerHTML = SVG_RAPPORTEUR; }
+  });
+})();
+</script>
+</body>
+</html>

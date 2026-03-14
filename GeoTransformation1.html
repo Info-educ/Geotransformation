@@ -238,14 +238,19 @@ canvas{display:block;touch-action:none;cursor:crosshair}
         <button class="tog on" id="ax-tg-proj">Médiatrices</button>
       </div>
     </div>
-    <div class="construct-info">
-      <span class="ci-title">🔍 Traits de construction</span>
-      <div class="ci-item"><div class="ci-swatch" style="background:#4ff7b0"></div><span><b>Axe (d)</b> = droite (PQ) : médiatrice de chaque segment [MM']. Points P et Q déplaçables.</span></div>
-      <div class="ci-item"><div class="ci-swatch" style="background:#f7c94f"></div><span><b>Médiatrices</b> : [MM'] coupé à angle droit par l'axe. Nbre de tirets = longueur du segment.</span></div>
-    </div>
     <button class="anim-btn ax" id="ax-anim">▶ Animer la symétrie</button>
     <div class="vid-section">
       <div class="sec-title">📹 Vidéos explicatives</div>
+      <button class="vid-btn av" onclick="window.open('https://www.youtube.com/watch?v=Kt1VtKhlySA','_blank')">
+        <div class="vid-icon">👁️</div>
+        <span class="vid-lbl">Reconnaitre un axe de symétrie</span>
+        <span class="vid-ply">▶</span>
+      </button>
+            <button class="vid-btn av" onclick="window.open('https://www.youtube.com/watch?v=x2MqdM1t5Y4','_blank')">
+        <div class="vid-icon">🔍</div>
+        <span class="vid-lbl">Déterminer un axe ou un centre de symétrie</span>
+        <span class="vid-ply">▶</span>
+      </button>
       <button class="vid-btn av" onclick="window.open('https://www.youtube.com/watch?v=JauG01P544k','_blank')">
         <div class="vid-icon">📍</div>
         <span class="vid-lbl">Symétrie d’un point</span>
@@ -337,13 +342,14 @@ canvas{display:block;touch-action:none;cursor:crosshair}
         <button class="tog on" id="ce-tg-lines">Liaisons M→O→M'</button>
       </div>
     </div>
-    <div class="construct-info">
-      <span class="ci-title">🔍 Traits de construction</span>
-      <div class="ci-item"><div class="ci-swatch" style="background:#f74fbc"></div><span><b>Liaisons</b> : M, O et M' sont alignés, O milieu de [MM'].</span></div>
-    </div>
     <button class="anim-btn ce" id="ce-anim">▶ Animer la symétrie</button>
     <div class="vid-section">
       <div class="sec-title">📹 Vidéos explicatives</div>
+      <button class="vid-btn cv" onclick="window.open('https://www.youtube.com/watch?v=x2MqdM1t5Y4','_blank')">
+        <div class="vid-icon">🔍</div>
+        <span class="vid-lbl">Déterminer un axe ou un centre de symétrie</span>
+        <span class="vid-ply">▶</span>
+      </button>
       <button class="vid-btn cv" onclick="window.open('https://www.youtube.com/watch?v=SmdZEpPKYF8','_blank')">
         <div class="vid-icon">📍</div>
         <span class="vid-lbl">Symétrie d’un point</span>
@@ -435,13 +441,14 @@ canvas{display:block;touch-action:none;cursor:crosshair}
         <button class="tog on" id="tr-tg-trail">Traces</button>
       </div>
     </div>
-    <div class="construct-info">
-      <span class="ci-title">🔍 Traits de construction</span>
-      <div class="ci-item"><div class="ci-swatch" style="background:#4fc8f7"></div><span><b>Traces</b> : déplacements parallèles de chaque point, égaux au vecteur <span style="display:inline-block;position:relative;padding-top:0.5em">MN<span style="position:absolute;top:0;left:0;right:0;text-align:center;font-size:0.85em;line-height:1">&#x2192;</span></span>.</span></div>
-    </div>
     <button class="anim-btn tr" id="tr-anim">▶ Animer la translation</button>
     <div class="vid-section">
       <div class="sec-title">📹 Vidéos explicatives</div>
+      <button class="vid-btn tv" onclick="window.open('https://www.youtube.com/watch?v=b_22mF3ZbwI','_blank')">
+        <div class="vid-icon">👁️</div>
+        <span class="vid-lbl">Reconnaitre une translation</span>
+        <span class="vid-ply">▶</span>
+      </button>
       <button class="vid-btn tv" onclick="window.open('https://www.youtube.com/watch?v=YzG5ZP9Kp6k','_blank')">
         <div class="vid-icon">📍</div>
         <span class="vid-lbl">Translation d’un point</span>
@@ -537,20 +544,20 @@ canvas{display:block;touch-action:none;cursor:crosshair}
         <button class="tog on" id="ro-tg-arc">Arcs de cercle</button>
       </div>
     </div>
-    <div class="construct-info">
-      <span class="ci-title">🔍 Traits de construction</span>
-      <div class="ci-item"><div class="ci-swatch" style="background:#f7c94f"></div><span><b>Rayons</b> : OM = OM', distance conservée.</span></div>
-      <div class="ci-item"><div class="ci-swatch" style="background:#f79440"></div><span><b>Arcs</b> : trajectoire circulaire de chaque point, angle α.</span></div>
-    </div>
     <button class="anim-btn ro" id="ro-anim">▶ Animer la rotation</button>
     <div class="vid-section">
       <div class="sec-title">📹 Vidéos explicatives</div>
+      <button class="vid-btn rv" onclick="window.open('https://www.youtube.com/watch?v=aiJ0J3x6UcQ','_blank')">
+        <div class="vid-icon">👁️</div>
+        <span class="vid-lbl">Reconnaitre une rotation</span>
+        <span class="vid-ply">▶</span>
+      </button>
       <button class="vid-btn rv" onclick="window.open('https://www.youtube.com/watch?v=xd_-KzMmjwI','_blank')">
         <div class="vid-icon">📍</div>
         <span class="vid-lbl">Rotation d’un point</span>
         <span class="vid-ply">▶</span>
       </button>
-      <button class="vid-btn rv" onclick="window.open('https://www.youtube.com/watch?v=aiJ0J3x6UcQ','_blank')">
+      <button class="vid-btn rv" onclick="window.open('https://www.youtube.com/watch?v=_lr-qTQVtCg','_blank')">
         <div class="vid-icon">🔷</div>
         <span class="vid-lbl">Rotation d’une figure</span>
         <span class="vid-ply">▶</span>

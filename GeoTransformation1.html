@@ -81,20 +81,6 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .construct-info .ci-item{display:flex;align-items:flex-start;gap:5px;margin-bottom:3px}
 .construct-info .ci-swatch{width:13px;height:3px;border-radius:2px;flex-shrink:0;margin-top:6px}
 
-/* ── ZONE IMAGE IMPORT ── */
-.img-zone{display:none;flex-direction:column;gap:7px}
-.img-zone.visible{display:flex}
-.img-drop{border:2px dashed var(--border);border-radius:8px;padding:12px 8px;text-align:center;font-size:.72rem;color:var(--muted);cursor:pointer;transition:all .2s;background:var(--surface2)}
-.img-drop:hover,.img-drop.drag-over{border-color:var(--a1);color:var(--text);background:rgba(79,142,247,.08)}
-.img-drop input[type=file]{display:none}
-.img-drop label{cursor:pointer;display:block}
-.img-preview{width:100%;border-radius:6px;border:1px solid var(--border);max-height:80px;object-fit:contain;display:none;background:var(--surface2)}
-.img-preview.visible{display:block}
-.img-hint{font-size:.68rem;color:var(--muted);text-align:center}
-.img-size-row{display:flex;gap:8px;align-items:center}
-.img-size-row label{font-size:.72rem;color:var(--text);font-weight:600;flex-shrink:0}
-.img-size-row input[type=range]{flex:1}
-
 /* ── CANVAS AREA ── */
 .canvas-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
 .canvas-bar{flex-shrink:0;height:32px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;font-size:.72rem;color:var(--muted);transition:all .25s}
@@ -204,26 +190,12 @@ canvas{display:block;touch-action:none;cursor:crosshair}
         <option value="cercle">○ Cercle</option>
         <option value="point">● Point libre M</option>
         <option value="droite">— Droite (AB)</option>
-        <option value="image">🖼 Image importée</option>
       </select>
       <div class="sides-zone" id="ax-sides-zone">
         <div class="slider-row">
           <div class="slider-lbl"><span>Nombre de côtés</span><span class="sval" id="ax-sides-v">5</span></div>
           <input type="range" id="ax-sides" min="3" max="12" value="5">
         </div>
-      </div>
-      <div class="img-zone" id="ax-img-zone">
-        <div class="img-drop" id="ax-drop">
-          <label for="ax-file-in">📂 Cliquer ou déposer une image<br><span style="font-size:.65rem;opacity:.7">JPG, PNG, GIF, SVG…</span></label>
-          <input type="file" id="ax-file-in" accept="image/*">
-        </div>
-        <img class="img-preview" id="ax-img-preview" alt="aperçu">
-        <div class="img-size-row">
-          <label>Taille</label>
-          <input type="range" id="ax-img-size" min="40" max="300" value="120">
-          <span class="sval" id="ax-img-size-v">120</span>
-        </div>
-        <div class="img-hint">L'image est transformée avec opacité 50%</div>
       </div>
     </div>
     <div class="panel-section">
@@ -309,24 +281,11 @@ canvas{display:block;touch-action:none;cursor:crosshair}
         <option value="cercle">○ Cercle</option>
         <option value="point">● Point libre M</option>
         <option value="droite">— Droite (AB)</option>
-        <option value="image">🖼 Image importée</option>
       </select>
       <div class="sides-zone" id="ce-sides-zone">
         <div class="slider-row">
           <div class="slider-lbl"><span>Nombre de côtés</span><span class="sval" id="ce-sides-v">5</span></div>
           <input type="range" id="ce-sides" min="3" max="12" value="5">
-        </div>
-      </div>
-      <div class="img-zone" id="ce-img-zone">
-        <div class="img-drop" id="ce-drop">
-          <label for="ce-file-in">📂 Cliquer ou déposer une image<br><span style="font-size:.65rem;opacity:.7">JPG, PNG, GIF, SVG…</span></label>
-          <input type="file" id="ce-file-in" accept="image/*">
-        </div>
-        <img class="img-preview" id="ce-img-preview" alt="aperçu">
-        <div class="img-size-row">
-          <label>Taille</label>
-          <input type="range" id="ce-img-size" min="40" max="300" value="120">
-          <span class="sval" id="ce-img-size-v">120</span>
         </div>
       </div>
     </div>
@@ -408,24 +367,11 @@ canvas{display:block;touch-action:none;cursor:crosshair}
         <option value="cercle">○ Cercle</option>
         <option value="point">● Point libre M</option>
         <option value="droite">— Droite (AB)</option>
-        <option value="image">🖼 Image importée</option>
       </select>
       <div class="sides-zone" id="tr-sides-zone">
         <div class="slider-row">
           <div class="slider-lbl"><span>Nombre de côtés</span><span class="sval" id="tr-sides-v">5</span></div>
           <input type="range" id="tr-sides" min="3" max="12" value="5">
-        </div>
-      </div>
-      <div class="img-zone" id="tr-img-zone">
-        <div class="img-drop" id="tr-drop">
-          <label for="tr-file-in">📂 Cliquer ou déposer une image<br><span style="font-size:.65rem;opacity:.7">JPG, PNG, GIF, SVG…</span></label>
-          <input type="file" id="tr-file-in" accept="image/*">
-        </div>
-        <img class="img-preview" id="tr-img-preview" alt="aperçu">
-        <div class="img-size-row">
-          <label>Taille</label>
-          <input type="range" id="tr-img-size" min="40" max="300" value="120">
-          <span class="sval" id="tr-img-size-v">120</span>
         </div>
       </div>
     </div>
@@ -507,24 +453,11 @@ canvas{display:block;touch-action:none;cursor:crosshair}
         <option value="cercle">○ Cercle</option>
         <option value="point">● Point libre M</option>
         <option value="droite">— Droite (AB)</option>
-        <option value="image">🖼 Image importée</option>
       </select>
       <div class="sides-zone" id="ro-sides-zone">
         <div class="slider-row">
           <div class="slider-lbl"><span>Nombre de côtés</span><span class="sval" id="ro-sides-v">5</span></div>
           <input type="range" id="ro-sides" min="3" max="12" value="5">
-        </div>
-      </div>
-      <div class="img-zone" id="ro-img-zone">
-        <div class="img-drop" id="ro-drop">
-          <label for="ro-file-in">📂 Cliquer ou déposer une image<br><span style="font-size:.65rem;opacity:.7">JPG, PNG, GIF, SVG…</span></label>
-          <input type="file" id="ro-file-in" accept="image/*">
-        </div>
-        <img class="img-preview" id="ro-img-preview" alt="aperçu">
-        <div class="img-size-row">
-          <label>Taille</label>
-          <input type="range" id="ro-img-size" min="40" max="300" value="120">
-          <span class="sval" id="ro-img-size-v">120</span>
         </div>
       </div>
     </div>
@@ -657,56 +590,6 @@ function reflAxis(x,y,ax,ay,deg){
 function lerp(a,b,t){ return a+(b-a)*t; }
 
 // ══════════════════════════════════════════
-//  GESTION IMAGE (partagée)
-// ══════════════════════════════════════════
-function setupImageZone(prefix, onLoad) {
-  const zone    = document.getElementById(prefix+'-img-zone');
-  const drop    = document.getElementById(prefix+'-drop');
-  const fileIn  = document.getElementById(prefix+'-file-in');
-  const preview = document.getElementById(prefix+'-img-preview');
-  const sizeEl  = document.getElementById(prefix+'-img-size');
-  const sizeVal = document.getElementById(prefix+'-img-size-v');
-
-  let imgEl = null;
-
-  function loadFile(file) {
-    if (!file || !file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        imgEl = img;
-        preview.src = e.target.result;
-        preview.classList.add('visible');
-        onLoad(img);
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  fileIn.addEventListener('change', e => loadFile(e.target.files[0]));
-
-  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag-over'); });
-  drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
-  drop.addEventListener('drop', e => {
-    e.preventDefault(); drop.classList.remove('drag-over');
-    loadFile(e.dataTransfer.files[0]);
-  });
-
-  sizeEl.addEventListener('input', () => {
-    sizeVal.textContent = sizeEl.value;
-    onLoad(imgEl);
-  });
-
-  return {
-    getImg: () => imgEl,
-    getSize: () => +sizeEl.value,
-    show: (v) => zone.classList.toggle('visible', v)
-  };
-}
-
-// ══════════════════════════════════════════
 //  CLASSE DE BASE
 // ══════════════════════════════════════════
 class Geo {
@@ -718,7 +601,7 @@ class Geo {
     this.W = this.H = this.OX = this.OY = 0;
     this.offset   = [0,0];          // déplacement du polygone / point
     this._drag    = false;
-    this._dragTgt = null;           // 'shape'|'ptA'|'ptB'|'pt'|'img'
+    this._dragTgt = null;           // 'shape'|'ptA'|'ptB'|'pt'
     this._doff    = [0,0];
     this.anim     = false;
     this.animT    = 0;
@@ -736,11 +619,6 @@ class Geo {
     this.ptA  = [-150, 80];
     this.ptB  = [50, -60];
 
-    // Image
-    this.imgObj   = null;
-    this.imgSize  = 120;
-    this.imgPos   = [-60, -60];     // coin haut-gauche en coords monde
-
     this._ro = new ResizeObserver(() => this._resize());
     this._ro.observe(this.cv.parentElement);
 
@@ -751,18 +629,10 @@ class Geo {
     this.cv.addEventListener('touchmove',  e=>{e.preventDefault();this._mv(this._txy(e));},{passive:false});
     window.addEventListener('touchend', () => { this._drag=false; this._dragTgt=null; });
 
-    // Gestion image
-    this.imgCtrl = setupImageZone(prefix, (img) => {
-      this.imgObj  = img;
-      this.imgSize = document.getElementById(prefix+'-img-size') ? +document.getElementById(prefix+'-img-size').value : 120;
-      this.draw();
-    });
-
     // Sélecteur de forme
     document.getElementById(prefix+'-shape').addEventListener('change', e => {
       this.shapeName  = e.target.value;
       this.shapeAngle = 0;
-      this.imgCtrl.show(this.shapeName === 'image');
       const sidesZone=document.getElementById(prefix+'-sides-zone');
       if(sidesZone) sidesZone.classList.toggle('visible', this.shapeName==='polygone');
       this._updateHint();
@@ -828,11 +698,6 @@ class Geo {
       // drag du milieu pour tout bouger
       const mx=(this.ptA[0]+this.ptB[0])/2, my=(this.ptA[1]+this.ptB[1])/2;
       if(Math.hypot(wx-mx,wy-my)<50){ this._drag=true; this._dragTgt='droite'; this._doff=[wx-mx,wy-my]; return; }
-    } else if(this.shapeName==='image'){
-      const s=this.imgSize;
-      const [px,py]=this.imgPos;
-      const [spx,spy]=this.w2s(px,py);
-      if(sx>=spx&&sx<=spx+s&&sy>=spy&&sy<=spy+s){ this._drag=true; this._dragTgt='img'; this._doff=[wx-px,wy-py]; return; }
     } else {
       const [cx,cy]=this.centroid(this.pts());
       const dist=Math.hypot(wx-cx,wy-cy);
@@ -870,7 +735,6 @@ class Geo {
       this.ptB=[this.ptB[0]+dx,this.ptB[1]+dy];
       this._doff=[wx-(this.ptA[0]+this.ptB[0])/2, wy-(this.ptA[1]+this.ptB[1])/2];
     }
-    else if(this._dragTgt==='img'){ this.imgPos=[wx-this._doff[0],wy-this._doff[1]]; }
     this.draw();
   }
 
@@ -900,8 +764,7 @@ class Geo {
       'polygone':'Centre = déplacer · Bord = faire pivoter',
       'cercle':'Glisser le cercle',
       'point':'Glisser le point M (●) sur le canevas',
-      'droite':'Glisser A ou B pour orienter · milieu pour déplacer',
-      'image':'Glisser l\'image · ajuster la taille dans le panneau'
+      'droite':'Glisser A ou B pour orienter · milieu pour déplacer'
     };
     const bar = document.getElementById(this.prefix+'-hint-bar');
     if(bar) bar.textContent = hints[this.shapeName]||'';
@@ -909,7 +772,6 @@ class Geo {
     if(ch){
       if(this.shapeName==='point') ch.textContent='💡 Glisser le point bleu M';
       else if(this.shapeName==='droite') ch.textContent='💡 Glisser A ou B pour orienter la droite';
-      else if(this.shapeName==='image') ch.textContent='💡 Importer une image dans le panneau gauche';
       else ch.textContent='';
     }
   }
@@ -1180,7 +1042,7 @@ class Axiale extends Geo {
     this.axP1=[0,-150]; this.axP2=[0,150];
     this.axAngle=90; this.axPos=0;
     this.offset=[-140,0];
-    this.ptM=[-120,60]; this.ptA=[-160,80]; this.ptB=[-20,-60]; this.imgPos=[-60,-60];
+    this.ptM=[-120,60]; this.ptA=[-160,80]; this.ptB=[-20,-60];
     this._syncAxisFromPoints();
     this.bindToggle('ax-tg-grid','showGrid',true);
     this.bindToggle('ax-tg-axis','showAxis',true);
@@ -1361,20 +1223,6 @@ class Axiale extends Geo {
       this.drawDroiteOrig(this.ptA[0],this.ptA[1],this.ptB[0],this.ptB[1]);
       this.drawDroiteImg(iiax,iiay,iibx,iiby);
     }
-    else if(this.shapeName==='image'){
-      const s=this.imgSize,[px,py]=this.imgPos,cx=px+s/2,cy=py-s/2;
-      const [icx,icy]=this._reflByPQ(cx,cy);
-      const ang=this.axAngle;
-      if(this.imgObj){
-        const [spx,spy]=this.w2s(px,py);
-        ctx.save();ctx.globalAlpha=1;ctx.drawImage(this.imgObj,spx,spy,s,s);
-        ctx.strokeStyle='#4f8ef7';ctx.lineWidth=2.5;ctx.strokeRect(spx,spy,s,s);ctx.restore();
-        const [isx,isy]=this.w2s(icx,icy);
-        ctx.save();ctx.globalAlpha=0.55;ctx.translate(isx,isy);
-        ctx.rotate(-(ang*2)*Math.PI/180);ctx.scale(-1,1);
-        ctx.drawImage(this.imgObj,-s/2,-s/2,s,s);ctx.restore();
-      } else {this._drawImgPlaceholder(px,py,s);}
-    }
     else {
       const orig=this.pts();
       const full=orig.map(([x,y])=>this._reflByPQ(x,y));
@@ -1409,13 +1257,6 @@ class Axiale extends Geo {
       {if(this.shapeName!=='cercle'){const labs=this.ptLabelsImg(); interp.forEach(([x,y],i)=>this.drawDot(x,y,'#f74f8e',6,labs[i]));}}
     }
   }
-  _drawImgPlaceholder(px,py,s){
-    const {ctx}=this,[spx,spy]=this.w2s(px,py);
-    ctx.save();ctx.strokeStyle='#4f8ef7';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(spx,spy,s,s);ctx.setLineDash([]);
-    ctx.fillStyle='rgba(79,142,247,.1)';ctx.fillRect(spx,spy,s,s);
-    ctx.font="13px 'Syne',sans-serif";ctx.fillStyle='#4f8ef7';ctx.textAlign='center';
-    ctx.fillText('📂 Image',spx+s/2,spy+s/2);ctx.textAlign='start';ctx.restore();
-  }
 }
 
 // ══════════════════════════════════════════
@@ -1427,7 +1268,7 @@ class Centrale extends Geo {
   constructor(){
     super('c-centrale','ce-coord','ce');
     this.ocx=0;this.ocy=0;this.offset=[-130,60];
-    this.ptM=[-120,60];this.ptA=[-160,80];this.ptB=[-20,-60];this.imgPos=[-60,-60];
+    this.ptM=[-120,60];this.ptA=[-160,80];this.ptB=[-20,-60];
     this.bindToggle('ce-tg-grid','showGrid',true);
     this.bindToggle('ce-tg-center','showCenter',true);
     this.bindToggle('ce-tg-lines','showLines',true);
@@ -1481,13 +1322,21 @@ class Centrale extends Geo {
       this.ctx.setLineDash([]);this.ctx.restore();
     });
   }
+  // Rotation d'un point (x,y) autour du centre (ocx,ocy) d'un angle en radians
+  _rotAnim(x,y,angleRad){
+    const dx=x-this.ocx, dy=y-this.ocy;
+    const c=Math.cos(angleRad), s=Math.sin(angleRad);
+    return [this.ocx+dx*c-dy*s, this.ocy+dx*s+dy*c];
+  }
   draw(){
     const {ctx,W,H}=this;if(!W)return;
     this.clearBg();if(this.showGrid)this.drawGrid();
     const O=[this.ocx,this.ocy],t=this.anim?this.animT:1;
+    // Angle de rotation pour l'animation : 0 → π (180°) selon t
+    const animAngle = t * Math.PI;
     if(this.shapeName==='point'){
       const [ix,iy]=this._tr(this.ptM[0],this.ptM[1]);
-      const [iix,iiy]=[lerp(this.ptM[0],ix,t),lerp(this.ptM[1],iy,t)];
+      const [iix,iiy]=this.anim ? this._rotAnim(this.ptM[0],this.ptM[1],animAngle) : [ix,iy];
       this._drawLinks([this.ptM],[[ix,iy]]);
       // Codage milieu segment [M,M'] — rang 1 (seul segment)
       if(this.showLines||this.anim){
@@ -1499,8 +1348,8 @@ class Centrale extends Geo {
     else if(this.shapeName==='droite'){
       const [iax,iay]=this._tr(this.ptA[0],this.ptA[1]);
       const [ibx,iby]=this._tr(this.ptB[0],this.ptB[1]);
-      const [iiax,iiay]=[lerp(this.ptA[0],iax,t),lerp(this.ptA[1],iay,t)];
-      const [iibx,iiby]=[lerp(this.ptB[0],ibx,t),lerp(this.ptB[1],iby,t)];
+      const [iiax,iiay]=this.anim ? this._rotAnim(this.ptA[0],this.ptA[1],animAngle) : [iax,iay];
+      const [iibx,iiby]=this.anim ? this._rotAnim(this.ptB[0],this.ptB[1],animAngle) : [ibx,iby];
       this._drawLinks([this.ptA,this.ptB],[[iax,iay],[ibx,iby]]);
       // Codage milieu avec rangs
       if(this.showLines||this.anim){
@@ -1512,21 +1361,12 @@ class Centrale extends Geo {
       this.drawDroiteOrig(this.ptA[0],this.ptA[1],this.ptB[0],this.ptB[1]);
       this.drawDroiteImg(iiax,iiay,iibx,iiby);
     }
-    else if(this.shapeName==='image'){
-      const s=this.imgSize,[px,py]=this.imgPos,cx=px+s/2,cy=py-s/2;
-      const [icx,icy]=this._tr(cx,cy);
-      this._drawLinks([[cx,cy]],[[icx,icy]]);
-      if(this.imgObj){
-        const [spx,spy]=this.w2s(px,py);
-        ctx.save();ctx.globalAlpha=1;ctx.drawImage(this.imgObj,spx,spy,s,s);ctx.strokeStyle='#4f8ef7';ctx.lineWidth=2.5;ctx.strokeRect(spx,spy,s,s);ctx.restore();
-        const [isx,isy]=this.w2s(icx,icy);
-        ctx.save();ctx.globalAlpha=0.55;ctx.translate(isx,isy);ctx.rotate(Math.PI);ctx.drawImage(this.imgObj,-s/2,-s/2,s,s);ctx.restore();
-      } else {this._drawImgPlaceholder(px,py,s,'#4f8ef7');}
-    }
     else {
       const orig=this.pts();
       const img2=orig.map(([x,y])=>this._tr(x,y));
-      const interp=orig.map(([x,y],i)=>[lerp(x,img2[i][0],t),lerp(y,img2[i][1],t)]);
+      const interp=this.anim
+        ? orig.map(([x,y])=>this._rotAnim(x,y,animAngle))
+        : img2;
       // Pour cercle : liaisons et codage milieu uniquement depuis le centre
       if(this.shapeName==='cercle'){
         const co=this.centroid(orig),ci=this.centroid(img2);
@@ -1564,12 +1404,6 @@ class Centrale extends Geo {
       this.drawDot(O[0],O[1],'#f7c94f',9,'O');
     }
   }
-  _drawImgPlaceholder(px,py,s,col){
-    const {ctx}=this,[spx,spy]=this.w2s(px,py);
-    ctx.save();ctx.strokeStyle=col;ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(spx,spy,s,s);ctx.setLineDash([]);
-    ctx.fillStyle='rgba(79,142,247,.1)';ctx.fillRect(spx,spy,s,s);
-    ctx.font="13px 'Syne',sans-serif";ctx.fillStyle=col;ctx.textAlign='center';ctx.fillText('📂 Image',spx+s/2,spy+s/2);ctx.textAlign='start';ctx.restore();
-  }
 }
 
 // ══════════════════════════════════════════
@@ -1579,7 +1413,7 @@ class Translation extends Geo {
   constructor(){
     super('c-translation','tr-coord','tr');
     this.vx=150; this.vy=80; this.offset=[-140,0];
-    this.ptM=[-120,60]; this.ptA=[-160,80]; this.ptB=[-20,-60]; this.imgPos=[-60,-60];
+    this.ptM=[-120,60]; this.ptA=[-160,80]; this.ptB=[-20,-60];
     // Vecteur MN : position de M (origine), N = M + (vx,vy)
     // Initialisé au premier _resize
     this.vecPos = null;   // coords monde de M
@@ -1704,19 +1538,6 @@ class Translation extends Geo {
       this.drawDroiteOrig(this.ptA[0],this.ptA[1],this.ptB[0],this.ptB[1]);
       this.drawDroiteImg(iax,iay,ibx,iby);
     }
-    else if(this.shapeName==='image'){
-      const s=this.imgSize,[px,py]=this.imgPos;
-      const[ipx,ipy]=this._tr(px,py,t);
-      drawTrail(px+s/2,py-s/2);
-      if(this.imgObj){
-        const[spx,spy]=this.w2s(px,py);
-        ctx.save();ctx.drawImage(this.imgObj,spx,spy,s,s);
-        ctx.strokeStyle='#4f8ef7';ctx.lineWidth=2.5;ctx.strokeRect(spx,spy,s,s);ctx.restore();
-        const[isx,isy]=this.w2s(ipx,ipy);
-        ctx.save();ctx.globalAlpha=0.55;ctx.drawImage(this.imgObj,isx,isy,s,s);
-        ctx.globalAlpha=1;ctx.strokeStyle='#f74f8e';ctx.lineWidth=2.5;ctx.strokeRect(isx,isy,s,s);ctx.restore();
-      } else { this._drawImgPlaceholder(px,py,s); }
-    }
     else {
       const orig=this.pts();
       const img2=orig.map(([x,y])=>this._tr(x,y,t));
@@ -1757,14 +1578,6 @@ class Translation extends Geo {
     }
   }
 
-  _drawImgPlaceholder(px,py,s){
-    const {ctx}=this,[spx,spy]=this.w2s(px,py);
-    ctx.save();ctx.strokeStyle='#4f8ef7';ctx.lineWidth=2;ctx.setLineDash([6,4]);
-    ctx.strokeRect(spx,spy,s,s);ctx.setLineDash([]);
-    ctx.fillStyle='rgba(79,142,247,.1)';ctx.fillRect(spx,spy,s,s);
-    ctx.font="13px 'Syne',sans-serif";ctx.fillStyle='#4f8ef7';ctx.textAlign='center';
-    ctx.fillText('📂 Image',spx+s/2,spy+s/2);ctx.textAlign='start';ctx.restore();
-  }
 }
 
 // ══════════════════════════════════════════
@@ -1776,7 +1589,7 @@ class Rotation extends Geo {
   constructor(){
     super('c-rotation','ro-coord','ro');
     this.roAng=90;this.rcx=0;this.rcy=0;this.offset=[90,30];
-    this.ptM=[-120,60];this.ptA=[-160,80];this.ptB=[-20,-60];this.imgPos=[-60,-60];
+    this.ptM=[-120,60];this.ptA=[-160,80];this.ptB=[-20,-60];
     this.bindSlider('ro-ang','roAng','ro-ang-v','°');
     this.bindToggle('ro-tg-grid','showGrid',true);
     this.bindToggle('ro-tg-center','showCenter',true);
@@ -1886,17 +1699,6 @@ class Rotation extends Geo {
       this.drawDroiteOrig(this.ptA[0],this.ptA[1],this.ptB[0],this.ptB[1]);
       this.drawDroiteImg(iax,iay,ibx,iby);
     }
-    else if(this.shapeName==='image'){
-      const s=this.imgSize,[px,py]=this.imgPos,cx=px+s/2,cy=py-s/2;
-      const [icx,icy]=this._tr(cx,cy,t);
-      this._drawArc(cx,cy,t);this._drawRadii(cx,cy,icx,icy);
-      if(this.imgObj){
-        const [spx,spy]=this.w2s(px,py);
-        ctx.save();ctx.drawImage(this.imgObj,spx,spy,s,s);ctx.strokeStyle='#4f8ef7';ctx.lineWidth=2.5;ctx.strokeRect(spx,spy,s,s);ctx.restore();
-        const [isx,isy]=this.w2s(icx,icy);
-        ctx.save();ctx.globalAlpha=0.55;ctx.translate(isx,isy);ctx.rotate(this.roAng*t*Math.PI/180);ctx.drawImage(this.imgObj,-s/2,-s/2,s,s);ctx.restore();
-      } else {this._drawImgPlaceholder(px,py,s);}
-    }
     else {
       const orig=this.pts();
       const img2=orig.map(([x,y])=>this._tr(x,y,t));
@@ -1928,19 +1730,13 @@ class Rotation extends Geo {
       this.drawDot(O[0],O[1],'#f7c94f',9,'O');
     }
   }
-  _drawImgPlaceholder(px,py,s){
-    const {ctx}=this,[spx,spy]=this.w2s(px,py);
-    ctx.save();ctx.strokeStyle='#4f8ef7';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(spx,spy,s,s);ctx.setLineDash([]);
-    ctx.fillStyle='rgba(79,142,247,.1)';ctx.fillRect(spx,spy,s,s);
-    ctx.font="13px 'Syne',sans-serif";ctx.fillStyle='#4f8ef7';ctx.textAlign='center';ctx.fillText('📂 Image',spx+s/2,spy+s/2);ctx.textAlign='start';ctx.restore();
-  }
 }
 
 // ══════════════════════════════════════════
 //  ONGLETS
 // ══════════════════════════════════════════
 // Propriétés de l'objet à copier d'un onglet à l'autre
-const SYNC_PROPS = ['shapeName','shapeSides','shapeAngle','offset','ptM','ptA','ptB','imgPos','imgObj','imgSize'];
+const SYNC_PROPS = ['shapeName','shapeSides','shapeAngle','offset','ptM','ptA','ptB'];
 
 function syncShapeToAll(src){
   const targets = Object.values(instances).filter(i=>i && i!==src);
@@ -1953,15 +1749,9 @@ function syncShapeToAll(src){
     const sidesEl  = document.getElementById(tgt.prefix+'-sides');
     const sidesVal = document.getElementById(tgt.prefix+'-sides-v');
     if(sidesEl){ sidesEl.value = src.shapeSides; if(sidesVal) sidesVal.textContent = src.shapeSides; }
-    // Afficher/masquer les zones image et côtés
+    // Afficher/masquer la zone côtés
     const sidesZone = document.getElementById(tgt.prefix+'-sides-zone');
     if(sidesZone) sidesZone.classList.toggle('visible', src.shapeName==='polygone');
-    tgt.imgCtrl.show(src.shapeName==='image');
-    // Synchroniser l'aperçu image si besoin
-    if(src.shapeName==='image' && src.imgObj){
-      const prev = document.getElementById(tgt.prefix+'-img-preview');
-      if(prev){ prev.src = document.getElementById(src.prefix+'-img-preview').src; prev.classList.add('visible'); }
-    }
   });
 }
 
